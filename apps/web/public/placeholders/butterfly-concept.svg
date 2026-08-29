@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 900" role="img" aria-labelledby="title desc">
+  <title id="title">Kelebek temalı 2 yaş kız çocuk doğum günü konsepti</title>
+  <desc id="desc">Lavanta, adaçayı ve krem tonlarında kelebek figürleri, kumaş flamalar ve sade pasta masası illüstrasyonu.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#f4f0f6"/><stop offset="1" stop-color="#d9d0e2"/></linearGradient>
+  </defs>
+  <rect width="1200" height="900" fill="url(#bg)"/>
+  <path d="M0 640Q300 560 600 640T1200 640V900H0Z" fill="#e6e9dc"/>
+  <path d="M120 200Q220 120 320 200L330 210Q220 260 120 200Z" fill="#c9b6d9"/><path d="M320 200Q420 120 520 200L510 212Q420 260 320 200Z" fill="#b7a0cc"/>
+  <path d="M760 130Q850 60 940 130L950 140Q850 190 760 130Z" fill="#c9b6d9"/><path d="M940 130Q1030 60 1120 130L1110 142Q1030 190 940 130Z" fill="#b7a0cc"/>
+  <path d="M160 300h880" stroke="#a89bb8" stroke-width="4" stroke-dasharray="2 22"/>
+  <path d="M230 300l40 90h-80z" fill="#f4e7d8"/><path d="M400 300l40 90h-80z" fill="#c8cfb6"/><path d="M570 300l40 90h-80z" fill="#e2d2e9"/><path d="M740 300l40 90h-80z" fill="#f4e7d8"/><path d="M910 300l40 90h-80z" fill="#c8cfb6"/>
+  <rect x="270" y="600" width="660" height="40" rx="20" fill="#9c8ab0"/><rect x="316" y="632" width="40" height="268" fill="#82708f"/><rect x="844" y="632" width="40" height="268" fill="#82708f"/>
+  <ellipse cx="600" cy="585" rx="150" ry="24" fill="#d4c8de"/>
+  <rect x="510" y="470" width="180" height="110" rx="26" fill="#fbf7f1"/><rect x="530" y="405" width="140" height="80" rx="22" fill="#f7efe4"/>
+  <path d="M560 405Q600 350 640 405" stroke="#b7a0cc" stroke-width="10" fill="none"/>
+  <circle cx="600" cy="352" r="10" fill="#8f7aa6"/>
+  <circle cx="380" cy="520" r="40" fill="#c8cfb6"/><circle cx="820" cy="520" r="40" fill="#e2d2e9"/>
+  <circle cx="440" cy="560" r="26" fill="#f4e7d8"/><circle cx="760" cy="560" r="26" fill="#f4e7d8"/>
+</svg>

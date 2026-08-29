@@ -1,0 +1,1186 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+/**
+ * Editors are public editorial authors; members are community contributors.
+ */
+enum ProfileKind {
+  MEMBER
+  EDITOR
+}
+
+enum UserStatus {
+  PENDING_VERIFICATION
+  ACTIVE
+  SUSPENDED
+  DELETED
+}
+
+enum ContentStatus {
+  DRAFT
+  IN_REVIEW
+  PUBLISHED
+  ARCHIVED
+}
+
+enum MediaStatus {
+  PENDING
+  PROCESSING
+  READY
+  REJECTED
+}
+
+enum SeoEntityType {
+  CATEGORY
+  CONCEPT
+  ARTICLE
+  EVENT_STORY
+  EXPERIENCE
+  SEO_LANDING_PAGE
+  PRODUCT
+  VENDOR
+  VENUE
+  QUESTION
+  DISCUSSION
+  POLL
+  GUIDE
+  TOPIC
+  PROFILE
+  COLLECTION
+}
+
+enum CommunityContentType {
+  INSPIRATION
+  QUESTION
+  DISCUSSION
+  EVENT_EXPERIENCE
+  POLL
+  GUIDE
+}
+
+enum CommunityVisibility {
+  PUBLIC
+  UNLISTED
+  HIDDEN
+  REMOVED
+}
+
+enum IndexabilityStatus {
+  PENDING
+  INDEX
+  NOINDEX
+}
+
+enum ModerationStatus {
+  DRAFT
+  SUBMITTED
+  UNDER_REVIEW
+  APPROVED
+  REJECTED
+  ARCHIVED
+}
+
+enum QuestionStatus {
+  OPEN
+  ANSWERED
+  RESOLVED
+  CLOSED
+}
+
+enum PollStatus {
+  OPEN
+  CLOSED
+  CANCELLED
+}
+
+enum TopicKind {
+  EVENT_TYPE
+  THEME
+  AGE
+  COLOR
+  BUDGET
+  FORMAT
+  GENERAL
+}
+
+enum ReactionType {
+  LIKE
+  HELPFUL
+}
+
+enum NotificationType {
+  ANSWER
+  REPLY
+  MENTION
+  REACTION
+  FOLLOW
+  ACCEPTED_ANSWER
+  MODERATION
+}
+
+enum ReportReason {
+  SPAM
+  HARASSMENT
+  COPYRIGHT
+  PRIVACY
+  INAPPROPRIATE
+  MISINFORMATION
+  OTHER
+}
+
+enum ReportStatus {
+  OPEN
+  IN_REVIEW
+  RESOLVED
+  DISMISSED
+}
+
+enum ModerationActionType {
+  APPROVE
+  REJECT
+  HIDE
+  REMOVE
+  RESTORE
+  LOCK
+  WARN
+  MUTE
+  BAN
+}
+
+enum UserSanctionType {
+  WARNING
+  MUTE
+  BAN
+}
+
+enum SanctionStatus {
+  ACTIVE
+  EXPIRED
+  REVOKED
+}
+
+enum MediaRightsStatus {
+  PENDING
+  SELF_OWNED
+  LICENSED
+  PERMISSION_GRANTED
+  REJECTED
+}
+
+enum RobotsDirective {
+  INDEX_FOLLOW
+  NOINDEX_FOLLOW
+  NOINDEX_NOFOLLOW
+}
+
+enum CollectionVisibility {
+  PUBLIC
+  UNLISTED
+  PRIVATE
+}
+
+enum ExperienceStatus {
+  DRAFT
+  SUBMITTED
+  UNDER_REVIEW
+  APPROVED
+  REJECTED
+  ARCHIVED
+}
+
+enum LeadStatus {
+  NEW
+  QUALIFIED
+  DISTRIBUTED
+  CLOSED
+  SPAM
+}
+
+model User {
+  id                  String             @id @default(uuid()) @db.Uuid
+  email               String             @unique @db.VarChar(320)
+  /// Null for accounts created through an identity provider only (no password set yet).
+  passwordHash        String?            @map("password_hash")
+  status              UserStatus         @default(PENDING_VERIFICATION)
+  emailVerifiedAt     DateTime?          @map("email_verified_at")
+  profile             Profile?
+  roles               UserRole[]
+  refreshSessions     RefreshSession[]
+  authoredConcepts    Concept[]          @relation("ConceptAuthor")
+  createdConcepts     Concept[]          @relation("ConceptCreatedBy")
+  updatedConcepts     Concept[]          @relation("ConceptUpdatedBy")
+  createdGuides       Guide[]            @relation("GuideCreatedBy")
+  authoredBlogPosts   BlogPost[]         @relation("BlogPostAuthor")
+  createdBlogPosts    BlogPost[]         @relation("BlogPostCreatedBy")
+  updatedBlogPosts    BlogPost[]         @relation("BlogPostUpdatedBy")
+  updatedGuides       Guide[]            @relation("GuideUpdatedBy")
+  experiences         Experience[]
+  collections         Collection[]
+  comments            Comment[]
+  mediaAssets         MediaAsset[]
+  questions           Question[]
+  answers             Answer[]
+  discussions         Discussion[]
+  polls               Poll[]
+  pollVotes           PollVote[]
+  guides              Guide[]
+  contentReactions    ContentReaction[]
+  contentSaves        ContentSave[]
+  commentReactions    CommentReaction[]
+  following           UserFollow[]       @relation("FollowerUser")
+  followers           UserFollow[]       @relation("FollowingUser")
+  questionFollows     QuestionFollow[]
+  discussionFollows   DiscussionFollow[]
+  topicFollows        TopicFollow[]
+  notifications       Notification[]     @relation("NotificationRecipient")
+  notificationActions Notification[]     @relation("NotificationActor")
+  reports             ContentReport[]
+  assignedCases       ModerationCase[]   @relation("AssignedModerator")
+  moderationNotes     ModerationNote[]
+  moderationActions   ModerationAction[]
+  sanctions           UserSanction[]     @relation("SanctionedUser")
+  issuedSanctions     UserSanction[]     @relation("SanctionIssuer")
+  createdAt           DateTime           @default(now()) @map("created_at")
+  updatedAt           DateTime           @updatedAt @map("updated_at")
+  deletedAt           DateTime?          @map("deleted_at")
+  authTokens          AuthToken[]
+  oauthAccounts       OAuthAccount[]
+
+  @@map("users")
+}
+
+model Profile {
+  id                String      @id @default(uuid()) @db.Uuid
+  userId            String      @unique @map("user_id") @db.Uuid
+  displayName       String      @map("display_name") @db.VarChar(120)
+  username          String?     @unique @db.VarChar(60)
+  bio               String?     @db.VarChar(500)
+  city              String?     @db.VarChar(100)
+  avatarUrl         String?     @map("avatar_url") @db.VarChar(2048)
+  websiteUrl        String?     @map("website_url") @db.VarChar(2048)
+  /// MEMBER (community) or EDITOR (public editorial author with an /editor/<username> page).
+  kind              ProfileKind @default(MEMBER)
+  jobTitle          String?     @map("job_title") @db.VarChar(120)
+  longBio           String?     @map("long_bio") @db.Text
+  expertise         String[]    @default([])
+  /// { instagram?, pinterest?, linkedin?, x?, website? } — public profile URLs only.
+  socialLinks       Json?       @map("social_links")
+  /// Member privacy: a private profile is never listed or linked as an author page.
+  isPublic          Boolean     @default(true) @map("is_public")
+  /// Inactive editors keep their byline on published content but lose the public profile page.
+  editorActive      Boolean     @default(true) @map("editor_active")
+  followerCount     Int         @default(0) @map("follower_count")
+  followingCount    Int         @default(0) @map("following_count")
+  contributionCount Int         @default(0) @map("contribution_count")
+  user              User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt         DateTime    @default(now()) @map("created_at")
+  updatedAt         DateTime    @updatedAt @map("updated_at")
+
+  @@index([kind, editorActive])
+  @@map("profiles")
+}
+
+model Role {
+  id          String           @id @default(uuid()) @db.Uuid
+  key         String           @unique @db.VarChar(64)
+  name        String           @db.VarChar(100)
+  description String?          @db.VarChar(300)
+  users       UserRole[]
+  permissions RolePermission[]
+  createdAt   DateTime         @default(now()) @map("created_at")
+  updatedAt   DateTime         @updatedAt @map("updated_at")
+
+  @@map("roles")
+}
+
+model Permission {
+  id          String           @id @default(uuid()) @db.Uuid
+  key         String           @unique @db.VarChar(100)
+  description String?          @db.VarChar(300)
+  roles       RolePermission[]
+  createdAt   DateTime         @default(now()) @map("created_at")
+
+  @@map("permissions")
+}
+
+model UserRole {
+  userId     String   @map("user_id") @db.Uuid
+  roleId     String   @map("role_id") @db.Uuid
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role       Role     @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  assignedAt DateTime @default(now()) @map("assigned_at")
+
+  @@id([userId, roleId])
+  @@map("user_roles")
+}
+
+model RolePermission {
+  roleId       String     @map("role_id") @db.Uuid
+  permissionId String     @map("permission_id") @db.Uuid
+  role         Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@id([roleId, permissionId])
+  @@map("role_permissions")
+}
+
+model RefreshSession {
+  id         String    @id @default(uuid()) @db.Uuid
+  userId     String    @map("user_id") @db.Uuid
+  tokenHash  String    @unique @map("token_hash")
+  userAgent  String?   @map("user_agent") @db.VarChar(500)
+  ipAddress  String?   @map("ip_address") @db.VarChar(64)
+  expiresAt  DateTime  @map("expires_at")
+  revokedAt  DateTime? @map("revoked_at")
+  lastUsedAt DateTime? @map("last_used_at")
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt  DateTime  @default(now()) @map("created_at")
+
+  @@index([userId, revokedAt])
+  @@index([expiresAt])
+  @@map("refresh_sessions")
+}
+
+model Category {
+  id          String        @id @default(uuid()) @db.Uuid
+  parentId    String?       @map("parent_id") @db.Uuid
+  name        String        @db.VarChar(140)
+  slug        String        @unique @db.VarChar(160)
+  description String?       @db.Text
+  status      ContentStatus @default(DRAFT)
+  sortOrder   Int           @default(0) @map("sort_order")
+  version     Int           @default(1)
+  parent      Category?     @relation("CategoryTree", fields: [parentId], references: [id], onDelete: SetNull)
+  children    Category[]    @relation("CategoryTree")
+  concepts    Concept[]
+  createdAt   DateTime      @default(now()) @map("created_at")
+  updatedAt   DateTime      @updatedAt @map("updated_at")
+  publishedAt DateTime?     @map("published_at")
+  archivedAt  DateTime?     @map("archived_at")
+
+  @@index([parentId, sortOrder])
+  @@index([status, sortOrder])
+  @@map("categories")
+}
+
+model Concept {
+  id               String              @id @default(uuid()) @db.Uuid
+  categoryId       String              @map("category_id") @db.Uuid
+  /// Public byline (an editor). `createdById` / `updatedById` are audit attribution only.
+  authorId         String?             @map("author_id") @db.Uuid
+  createdById      String?             @map("created_by_id") @db.Uuid
+  updatedById      String?             @map("updated_by_id") @db.Uuid
+  title            String              @db.VarChar(180)
+  slug             String              @unique @db.VarChar(200)
+  summary          String              @db.VarChar(320)
+  description      String              @db.Text
+  status           ContentStatus       @default(DRAFT)
+  heroImageUrl     String?             @map("hero_image_url") @db.VarChar(2048)
+  heroImageAlt     String?             @map("hero_image_alt") @db.VarChar(220)
+  budgetMin        Decimal?            @map("budget_min") @db.Decimal(12, 2)
+  budgetMax        Decimal?            @map("budget_max") @db.Decimal(12, 2)
+  currency         String              @default("TRY") @db.Char(3)
+  version          Int                 @default(1)
+  visibility       CommunityVisibility @default(PUBLIC)
+  moderationStatus ModerationStatus    @default(APPROVED) @map("moderation_status")
+  indexability     IndexabilityStatus  @default(INDEX)
+  featured         Boolean             @default(false)
+  reactionCount    Int                 @default(0) @map("reaction_count")
+  saveCount        Int                 @default(0) @map("save_count")
+  commentCount     Int                 @default(0) @map("comment_count")
+  viewCount        Int                 @default(0) @map("view_count")
+  experienceCount  Int                 @default(0) @map("experience_count")
+  questionCount    Int                 @default(0) @map("question_count")
+  introduction     String?             @db.Text
+  colorPalette     Json?               @map("color_palette")
+  decorationIdeas  String?             @map("decoration_ideas") @db.Text
+  tableSetup       String?             @map("table_setup") @db.Text
+  balloonIdeas     String?             @map("balloon_ideas") @db.Text
+  cakeIdeas        String?             @map("cake_ideas") @db.Text
+  venueSuggestions String?             @map("venue_suggestions") @db.Text
+  practicalTips    String?             @map("practical_tips") @db.Text
+  alternatives     String?             @db.Text
+  faq              Json?
+  category         Category            @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  author           User?               @relation("ConceptAuthor", fields: [authorId], references: [id], onDelete: SetNull)
+  createdBy        User?               @relation("ConceptCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  updatedBy        User?               @relation("ConceptUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
+  images           ConceptImage[]
+  questions        Question[]
+  experiences      Experience[]
+  createdAt        DateTime            @default(now()) @map("created_at")
+  updatedAt        DateTime            @updatedAt @map("updated_at")
+  publishedAt      DateTime?           @map("published_at")
+  archivedAt       DateTime?           @map("archived_at")
+
+  @@index([categoryId, status, publishedAt])
+  @@index([status, publishedAt])
+  @@map("concepts")
+}
+
+model ConceptImage {
+  id           String      @id @default(uuid()) @db.Uuid
+  conceptId    String      @map("concept_id") @db.Uuid
+  mediaAssetId String?     @map("media_asset_id") @db.Uuid
+  url          String      @db.VarChar(2048)
+  altText      String      @map("alt_text") @db.VarChar(220)
+  sortOrder    Int         @default(0) @map("sort_order")
+  concept      Concept     @relation(fields: [conceptId], references: [id], onDelete: Cascade)
+  mediaAsset   MediaAsset? @relation(fields: [mediaAssetId], references: [id], onDelete: SetNull)
+  createdAt    DateTime    @default(now()) @map("created_at")
+
+  @@index([conceptId, sortOrder])
+  @@map("concept_images")
+}
+
+model MediaAsset {
+  id                 String            @id @default(uuid()) @db.Uuid
+  storageKey         String            @unique @map("storage_key") @db.VarChar(500)
+  bucket             String            @db.VarChar(100)
+  originalName       String            @map("original_name") @db.VarChar(255)
+  mimeType           String            @map("mime_type") @db.VarChar(100)
+  byteSize           BigInt            @map("byte_size")
+  width              Int?
+  height             Int?
+  checksum           String?           @db.VarChar(128)
+  status             MediaStatus       @default(PENDING)
+  altText            String?           @map("alt_text") @db.VarChar(220)
+  uploaderId         String?           @map("uploader_id") @db.Uuid
+  rightsStatus       MediaRightsStatus @default(PENDING) @map("rights_status")
+  attribution        String?           @db.VarChar(500)
+  licenseInfo        String?           @map("license_info") @db.VarChar(500)
+  consentConfirmedAt DateTime?         @map("consent_confirmed_at")
+  uploader           User?             @relation(fields: [uploaderId], references: [id], onDelete: SetNull)
+  images             ConceptImage[]
+  experienceImages   ExperienceImage[]
+  questionImages     QuestionImage[]
+  createdAt          DateTime          @default(now()) @map("created_at")
+  updatedAt          DateTime          @updatedAt @map("updated_at")
+
+  @@index([status, createdAt])
+  @@index([rightsStatus, createdAt])
+  @@map("media_assets")
+}
+
+model SeoMetadata {
+  id             String          @id @default(uuid()) @db.Uuid
+  entityType     SeoEntityType   @map("entity_type")
+  entityId       String          @map("entity_id") @db.Uuid
+  title          String          @db.VarChar(70)
+  description    String          @db.VarChar(170)
+  canonicalUrl   String?         @map("canonical_url") @db.VarChar(2048)
+  robots         RobotsDirective @default(INDEX_FOLLOW)
+  structuredData Json?           @map("structured_data")
+  createdAt      DateTime        @default(now()) @map("created_at")
+  updatedAt      DateTime        @updatedAt @map("updated_at")
+
+  @@unique([entityType, entityId])
+  @@index([entityType, robots])
+  @@map("seo_metadata")
+}
+
+model SlugHistory {
+  id         String        @id @default(uuid()) @db.Uuid
+  entityType SeoEntityType @map("entity_type")
+  entityId   String        @map("entity_id") @db.Uuid
+  oldPath    String        @unique @map("old_path") @db.VarChar(500)
+  newPath    String        @map("new_path") @db.VarChar(500)
+  createdAt  DateTime      @default(now()) @map("created_at")
+
+  @@index([entityType, entityId])
+  @@map("slug_history")
+}
+
+model EventType {
+  id          String       @id @default(uuid()) @db.Uuid
+  name        String       @db.VarChar(120)
+  slug        String       @unique @db.VarChar(140)
+  experiences Experience[]
+  questions   Question[]
+  createdAt   DateTime     @default(now()) @map("created_at")
+
+  @@map("event_types")
+}
+
+model EventTheme {
+  id        String   @id @default(uuid()) @db.Uuid
+  name      String   @db.VarChar(120)
+  slug      String   @unique @db.VarChar(140)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("event_themes")
+}
+
+model Color {
+  id        String   @id @default(uuid()) @db.Uuid
+  name      String   @db.VarChar(80)
+  slug      String   @unique @db.VarChar(100)
+  hex       String?  @db.Char(7)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("colors")
+}
+
+model Experience {
+  id              String              @id @default(uuid()) @db.Uuid
+  authorId        String              @map("author_id") @db.Uuid
+  conceptId       String?             @map("concept_id") @db.Uuid
+  eventTypeId     String?             @map("event_type_id") @db.Uuid
+  title           String              @db.VarChar(180)
+  slug            String              @unique @db.VarChar(200)
+  body            String              @db.Text
+  summary         String?             @db.VarChar(320)
+  status          ExperienceStatus    @default(DRAFT)
+  eventDate       DateTime?           @map("event_date") @db.Date
+  city            String?             @db.VarChar(100)
+  district        String?             @db.VarChar(100)
+  venueType       String?             @map("venue_type") @db.VarChar(100)
+  guestCount      Int?                @map("guest_count")
+  ageLabel        String?             @map("age_label") @db.VarChar(60)
+  budgetLabel     String?             @map("budget_label") @db.VarChar(80)
+  themeVariation  String?             @map("theme_variation") @db.VarChar(160)
+  colors          String[]            @default([])
+  tips            String?             @db.Text
+  whatWorked      String?             @map("what_worked") @db.Text
+  whatWouldChange String?             @map("what_would_change") @db.Text
+  heroImageUrl    String?             @map("hero_image_url") @db.VarChar(2048)
+  visibility      CommunityVisibility @default(PUBLIC)
+  indexability    IndexabilityStatus  @default(PENDING)
+  featured        Boolean             @default(false)
+  reactionCount   Int                 @default(0) @map("reaction_count")
+  saveCount       Int                 @default(0) @map("save_count")
+  commentCount    Int                 @default(0) @map("comment_count")
+  viewCount       Int                 @default(0) @map("view_count")
+  author          User                @relation(fields: [authorId], references: [id], onDelete: Restrict)
+  concept         Concept?            @relation(fields: [conceptId], references: [id], onDelete: SetNull)
+  eventType       EventType?          @relation(fields: [eventTypeId], references: [id], onDelete: SetNull)
+  images          ExperienceImage[]
+  createdAt       DateTime            @default(now()) @map("created_at")
+  updatedAt       DateTime            @updatedAt @map("updated_at")
+
+  @@index([authorId, status])
+  @@index([conceptId, status, createdAt])
+  @@index([eventTypeId, status, createdAt])
+  @@index([status, createdAt])
+  @@map("experiences")
+}
+
+model ExperienceImage {
+  id           String      @id @default(uuid()) @db.Uuid
+  experienceId String      @map("experience_id") @db.Uuid
+  mediaAssetId String?     @map("media_asset_id") @db.Uuid
+  url          String      @db.VarChar(2048)
+  altText      String      @map("alt_text") @db.VarChar(220)
+  sortOrder    Int         @default(0) @map("sort_order")
+  experience   Experience  @relation(fields: [experienceId], references: [id], onDelete: Cascade)
+  mediaAsset   MediaAsset? @relation(fields: [mediaAssetId], references: [id], onDelete: SetNull)
+  createdAt    DateTime    @default(now()) @map("created_at")
+
+  @@index([experienceId, sortOrder])
+  @@map("experience_images")
+}
+
+model Collection {
+  id            String               @id @default(uuid()) @db.Uuid
+  ownerId       String               @map("owner_id") @db.Uuid
+  title         String               @db.VarChar(160)
+  slug          String               @db.VarChar(180)
+  description   String?              @db.VarChar(500)
+  coverImageUrl String?              @map("cover_image_url") @db.VarChar(2048)
+  itemCount     Int                  @default(0) @map("item_count")
+  visibility    CollectionVisibility @default(PRIVATE)
+  owner         User                 @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  items         CollectionItem[]
+  createdAt     DateTime             @default(now()) @map("created_at")
+  updatedAt     DateTime             @updatedAt @map("updated_at")
+
+  @@unique([ownerId, slug])
+  @@index([visibility, createdAt])
+  @@map("collections")
+}
+
+model CollectionItem {
+  id           String     @id @default(uuid()) @db.Uuid
+  collectionId String     @map("collection_id") @db.Uuid
+  entityType   String     @map("entity_type") @db.VarChar(50)
+  entityId     String     @map("entity_id") @db.Uuid
+  sortOrder    Int        @default(0) @map("sort_order")
+  collection   Collection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+  createdAt    DateTime   @default(now()) @map("created_at")
+
+  @@unique([collectionId, entityType, entityId])
+  @@index([collectionId, sortOrder])
+  @@map("collection_items")
+}
+
+model Comment {
+  id               String              @id @default(uuid()) @db.Uuid
+  authorId         String              @map("author_id") @db.Uuid
+  parentId         String?             @map("parent_id") @db.Uuid
+  entityType       String              @map("entity_type") @db.VarChar(50)
+  entityId         String              @map("entity_id") @db.Uuid
+  body             String              @db.VarChar(3000)
+  depth            Int                 @default(0)
+  visibility       CommunityVisibility @default(PUBLIC)
+  moderationStatus ModerationStatus    @default(APPROVED) @map("moderation_status")
+  reactionCount    Int                 @default(0) @map("reaction_count")
+  editedAt         DateTime?           @map("edited_at")
+  author           User                @relation(fields: [authorId], references: [id], onDelete: Restrict)
+  parent           Comment?            @relation("CommentTree", fields: [parentId], references: [id], onDelete: SetNull)
+  replies          Comment[]           @relation("CommentTree")
+  reactions        CommentReaction[]
+  createdAt        DateTime            @default(now()) @map("created_at")
+  updatedAt        DateTime            @updatedAt @map("updated_at")
+  deletedAt        DateTime?           @map("deleted_at")
+
+  @@index([entityType, entityId, createdAt])
+  @@index([authorId, createdAt])
+  @@map("comments")
+}
+
+model Topic {
+  id            String         @id @default(uuid()) @db.Uuid
+  name          String         @db.VarChar(120)
+  slug          String         @unique @db.VarChar(140)
+  description   String?        @db.VarChar(500)
+  kind          TopicKind      @default(GENERAL)
+  featured      Boolean        @default(false)
+  contentCount  Int            @default(0) @map("content_count")
+  followerCount Int            @default(0) @map("follower_count")
+  follows       TopicFollow[]
+  contentLinks  ContentTopic[]
+  createdAt     DateTime       @default(now()) @map("created_at")
+  updatedAt     DateTime       @updatedAt @map("updated_at")
+
+  @@index([kind, featured, contentCount])
+  @@map("topics")
+}
+
+model ContentTopic {
+  id          String               @id @default(uuid()) @db.Uuid
+  topicId     String               @map("topic_id") @db.Uuid
+  contentType CommunityContentType @map("content_type")
+  contentId   String               @map("content_id") @db.Uuid
+  topic       Topic                @relation(fields: [topicId], references: [id], onDelete: Cascade)
+  createdAt   DateTime             @default(now()) @map("created_at")
+
+  @@unique([topicId, contentType, contentId])
+  @@index([contentType, contentId])
+  @@map("content_topics")
+}
+
+model Question {
+  id               String              @id @default(uuid()) @db.Uuid
+  authorId         String              @map("author_id") @db.Uuid
+  conceptId        String?             @map("concept_id") @db.Uuid
+  eventTypeId      String?             @map("event_type_id") @db.Uuid
+  acceptedAnswerId String?             @unique @map("accepted_answer_id") @db.Uuid
+  title            String              @db.VarChar(180)
+  slug             String              @unique @db.VarChar(200)
+  body             String              @db.Text
+  status           QuestionStatus      @default(OPEN)
+  visibility       CommunityVisibility @default(PUBLIC)
+  moderationStatus ModerationStatus    @default(SUBMITTED) @map("moderation_status")
+  indexability     IndexabilityStatus  @default(PENDING)
+  featured         Boolean             @default(false)
+  answerCount      Int                 @default(0) @map("answer_count")
+  followerCount    Int                 @default(0) @map("follower_count")
+  reactionCount    Int                 @default(0) @map("reaction_count")
+  saveCount        Int                 @default(0) @map("save_count")
+  viewCount        Int                 @default(0) @map("view_count")
+  author           User                @relation(fields: [authorId], references: [id], onDelete: Restrict)
+  concept          Concept?            @relation(fields: [conceptId], references: [id], onDelete: SetNull)
+  eventType        EventType?          @relation(fields: [eventTypeId], references: [id], onDelete: SetNull)
+  images           QuestionImage[]
+  answers          Answer[]            @relation("QuestionAnswers")
+  acceptedAnswer   Answer?             @relation("AcceptedQuestionAnswer", fields: [acceptedAnswerId], references: [id], onDelete: SetNull)
+  follows          QuestionFollow[]
+  createdAt        DateTime            @default(now()) @map("created_at")
+  updatedAt        DateTime            @updatedAt @map("updated_at")
+  publishedAt      DateTime?           @map("published_at")
+
+  @@index([moderationStatus, visibility, createdAt])
+  @@index([conceptId, moderationStatus, createdAt])
+  @@index([status, answerCount, createdAt])
+  @@map("questions")
+}
+
+model QuestionImage {
+  id           String      @id @default(uuid()) @db.Uuid
+  questionId   String      @map("question_id") @db.Uuid
+  mediaAssetId String?     @map("media_asset_id") @db.Uuid
+  url          String      @db.VarChar(2048)
+  altText      String      @map("alt_text") @db.VarChar(220)
+  sortOrder    Int         @default(0) @map("sort_order")
+  question     Question    @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  mediaAsset   MediaAsset? @relation(fields: [mediaAssetId], references: [id], onDelete: SetNull)
+  createdAt    DateTime    @default(now()) @map("created_at")
+
+  @@index([questionId, sortOrder])
+  @@map("question_images")
+}
+
+model Answer {
+  id               String              @id @default(uuid()) @db.Uuid
+  questionId       String              @map("question_id") @db.Uuid
+  authorId         String              @map("author_id") @db.Uuid
+  body             String              @db.Text
+  visibility       CommunityVisibility @default(PUBLIC)
+  moderationStatus ModerationStatus    @default(APPROVED) @map("moderation_status")
+  helpfulCount     Int                 @default(0) @map("helpful_count")
+  question         Question            @relation("QuestionAnswers", fields: [questionId], references: [id], onDelete: Cascade)
+  author           User                @relation(fields: [authorId], references: [id], onDelete: Restrict)
+  acceptedFor      Question?           @relation("AcceptedQuestionAnswer")
+  createdAt        DateTime            @default(now()) @map("created_at")
+  updatedAt        DateTime            @updatedAt @map("updated_at")
+
+  @@index([questionId, createdAt])
+  @@index([authorId, createdAt])
+  @@map("answers")
+}
+
+model Discussion {
+  id               String              @id @default(uuid()) @db.Uuid
+  authorId         String              @map("author_id") @db.Uuid
+  title            String              @db.VarChar(180)
+  slug             String              @unique @db.VarChar(200)
+  body             String              @db.Text
+  visibility       CommunityVisibility @default(PUBLIC)
+  moderationStatus ModerationStatus    @default(SUBMITTED) @map("moderation_status")
+  indexability     IndexabilityStatus  @default(PENDING)
+  featured         Boolean             @default(false)
+  pinned           Boolean             @default(false)
+  locked           Boolean             @default(false)
+  commentCount     Int                 @default(0) @map("comment_count")
+  followerCount    Int                 @default(0) @map("follower_count")
+  reactionCount    Int                 @default(0) @map("reaction_count")
+  saveCount        Int                 @default(0) @map("save_count")
+  viewCount        Int                 @default(0) @map("view_count")
+  author           User                @relation(fields: [authorId], references: [id], onDelete: Restrict)
+  follows          DiscussionFollow[]
+  createdAt        DateTime            @default(now()) @map("created_at")
+  updatedAt        DateTime            @updatedAt @map("updated_at")
+  publishedAt      DateTime?           @map("published_at")
+
+  @@index([moderationStatus, visibility, pinned, createdAt])
+  @@map("discussions")
+}
+
+model Poll {
+  id               String              @id @default(uuid()) @db.Uuid
+  authorId         String              @map("author_id") @db.Uuid
+  title            String              @db.VarChar(180)
+  slug             String              @unique @db.VarChar(200)
+  body             String?             @db.VarChar(1000)
+  status           PollStatus          @default(OPEN)
+  visibility       CommunityVisibility @default(PUBLIC)
+  moderationStatus ModerationStatus    @default(SUBMITTED) @map("moderation_status")
+  indexability     IndexabilityStatus  @default(PENDING)
+  featured         Boolean             @default(false)
+  voteCount        Int                 @default(0) @map("vote_count")
+  commentCount     Int                 @default(0) @map("comment_count")
+  reactionCount    Int                 @default(0) @map("reaction_count")
+  saveCount        Int                 @default(0) @map("save_count")
+  author           User                @relation(fields: [authorId], references: [id], onDelete: Restrict)
+  options          PollOption[]
+  votes            PollVote[]
+  closesAt         DateTime?           @map("closes_at")
+  createdAt        DateTime            @default(now()) @map("created_at")
+  updatedAt        DateTime            @updatedAt @map("updated_at")
+  publishedAt      DateTime?           @map("published_at")
+
+  @@index([moderationStatus, visibility, createdAt])
+  @@map("polls")
+}
+
+model PollOption {
+  id        String     @id @default(uuid()) @db.Uuid
+  pollId    String     @map("poll_id") @db.Uuid
+  label     String     @db.VarChar(180)
+  sortOrder Int        @default(0) @map("sort_order")
+  voteCount Int        @default(0) @map("vote_count")
+  poll      Poll       @relation(fields: [pollId], references: [id], onDelete: Cascade)
+  votes     PollVote[]
+
+  @@index([pollId, sortOrder])
+  @@map("poll_options")
+}
+
+model PollVote {
+  id        String     @id @default(uuid()) @db.Uuid
+  pollId    String     @map("poll_id") @db.Uuid
+  optionId  String     @map("option_id") @db.Uuid
+  userId    String     @map("user_id") @db.Uuid
+  poll      Poll       @relation(fields: [pollId], references: [id], onDelete: Cascade)
+  option    PollOption @relation(fields: [optionId], references: [id], onDelete: Cascade)
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime   @default(now()) @map("created_at")
+
+  @@unique([pollId, userId])
+  @@index([optionId])
+  @@map("poll_votes")
+}
+
+model Guide {
+  id               String              @id @default(uuid()) @db.Uuid
+  authorId         String              @map("author_id") @db.Uuid
+  createdById      String?             @map("created_by_id") @db.Uuid
+  updatedById      String?             @map("updated_by_id") @db.Uuid
+  title            String              @db.VarChar(180)
+  slug             String              @unique @db.VarChar(200)
+  summary          String              @db.VarChar(320)
+  body             String              @db.Text
+  status           ContentStatus       @default(DRAFT)
+  visibility       CommunityVisibility @default(PUBLIC)
+  moderationStatus ModerationStatus    @default(UNDER_REVIEW) @map("moderation_status")
+  indexability     IndexabilityStatus  @default(PENDING)
+  featured         Boolean             @default(false)
+  reactionCount    Int                 @default(0) @map("reaction_count")
+  saveCount        Int                 @default(0) @map("save_count")
+  commentCount     Int                 @default(0) @map("comment_count")
+  viewCount        Int                 @default(0) @map("view_count")
+  author           User                @relation(fields: [authorId], references: [id], onDelete: Restrict)
+  createdBy        User?               @relation("GuideCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  updatedBy        User?               @relation("GuideUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
+  createdAt        DateTime            @default(now()) @map("created_at")
+  updatedAt        DateTime            @updatedAt @map("updated_at")
+  publishedAt      DateTime?           @map("published_at")
+
+  @@index([status, moderationStatus, visibility, publishedAt])
+  @@map("guides")
+}
+
+/// Blog taxonomy (independent from the concept categories): "Planlama", "Trendler", "DIY" …
+model BlogCategory {
+  id          String        @id @default(uuid()) @db.Uuid
+  name        String        @db.VarChar(140)
+  slug        String        @unique @db.VarChar(160)
+  description String?       @db.Text
+  status      ContentStatus @default(PUBLISHED)
+  sortOrder   Int           @default(0) @map("sort_order")
+  posts       BlogPost[]
+  createdAt   DateTime      @default(now()) @map("created_at")
+  updatedAt   DateTime      @updatedAt @map("updated_at")
+
+  @@index([status, sortOrder])
+  @@map("blog_categories")
+}
+
+/// Editorial blog article (Markdown body). Public only when PUBLISHED and `publishedAt <= now()`,
+/// so a future `publishedAt` schedules the post.
+model BlogPost {
+  id             String             @id @default(uuid()) @db.Uuid
+  categoryId     String?            @map("category_id") @db.Uuid
+  /// Public byline (an editor). `createdById` / `updatedById` are audit attribution only.
+  authorId       String?            @map("author_id") @db.Uuid
+  createdById    String?            @map("created_by_id") @db.Uuid
+  updatedById    String?            @map("updated_by_id") @db.Uuid
+  title          String             @db.VarChar(180)
+  slug           String             @unique @db.VarChar(200)
+  excerpt        String             @db.VarChar(320)
+  body           String             @db.Text
+  coverImageUrl  String?            @map("cover_image_url") @db.VarChar(2048)
+  coverImageAlt  String?            @map("cover_image_alt") @db.VarChar(220)
+  tags           String[]           @default([])
+  status         ContentStatus      @default(DRAFT)
+  indexability   IndexabilityStatus @default(INDEX)
+  featured       Boolean            @default(false)
+  seoTitle       String?            @map("seo_title") @db.VarChar(70)
+  seoDescription String?            @map("seo_description") @db.VarChar(170)
+  readingMinutes Int                @default(1) @map("reading_minutes")
+  viewCount      Int                @default(0) @map("view_count")
+  category       BlogCategory?      @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  author         User?              @relation("BlogPostAuthor", fields: [authorId], references: [id], onDelete: SetNull)
+  createdBy      User?              @relation("BlogPostCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  updatedBy      User?              @relation("BlogPostUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
+  createdAt      DateTime           @default(now()) @map("created_at")
+  updatedAt      DateTime           @updatedAt @map("updated_at")
+  publishedAt    DateTime?          @map("published_at")
+
+  @@index([status, publishedAt])
+  @@index([categoryId, status, publishedAt])
+  @@map("blog_posts")
+}
+
+model ContentReaction {
+  id          String               @id @default(uuid()) @db.Uuid
+  userId      String               @map("user_id") @db.Uuid
+  contentType CommunityContentType @map("content_type")
+  contentId   String               @map("content_id") @db.Uuid
+  type        ReactionType         @default(LIKE)
+  user        User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt   DateTime             @default(now()) @map("created_at")
+
+  @@unique([userId, contentType, contentId, type])
+  @@index([contentType, contentId, type])
+  @@map("content_reactions")
+}
+
+model ContentSave {
+  id          String               @id @default(uuid()) @db.Uuid
+  userId      String               @map("user_id") @db.Uuid
+  contentType CommunityContentType @map("content_type")
+  contentId   String               @map("content_id") @db.Uuid
+  user        User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt   DateTime             @default(now()) @map("created_at")
+
+  @@unique([userId, contentType, contentId])
+  @@index([contentType, contentId])
+  @@map("content_saves")
+}
+
+model CommentReaction {
+  id        String       @id @default(uuid()) @db.Uuid
+  commentId String       @map("comment_id") @db.Uuid
+  userId    String       @map("user_id") @db.Uuid
+  type      ReactionType @default(LIKE)
+  comment   Comment      @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  user      User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime     @default(now()) @map("created_at")
+
+  @@unique([commentId, userId, type])
+  @@map("comment_reactions")
+}
+
+model UserFollow {
+  followerId  String   @map("follower_id") @db.Uuid
+  followingId String   @map("following_id") @db.Uuid
+  follower    User     @relation("FollowerUser", fields: [followerId], references: [id], onDelete: Cascade)
+  following   User     @relation("FollowingUser", fields: [followingId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  @@id([followerId, followingId])
+  @@index([followingId, createdAt])
+  @@map("user_follows")
+}
+
+model QuestionFollow {
+  questionId String   @map("question_id") @db.Uuid
+  userId     String   @map("user_id") @db.Uuid
+  question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  @@id([questionId, userId])
+  @@map("question_follows")
+}
+
+model DiscussionFollow {
+  discussionId String     @map("discussion_id") @db.Uuid
+  userId       String     @map("user_id") @db.Uuid
+  discussion   Discussion @relation(fields: [discussionId], references: [id], onDelete: Cascade)
+  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt    DateTime   @default(now()) @map("created_at")
+
+  @@id([discussionId, userId])
+  @@map("discussion_follows")
+}
+
+model TopicFollow {
+  topicId   String   @map("topic_id") @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  topic     Topic    @relation(fields: [topicId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@id([topicId, userId])
+  @@map("topic_follows")
+}
+
+model Notification {
+  id          String                @id @default(uuid()) @db.Uuid
+  userId      String                @map("user_id") @db.Uuid
+  actorId     String?               @map("actor_id") @db.Uuid
+  type        NotificationType
+  contentType CommunityContentType? @map("content_type")
+  entityId    String?               @map("entity_id") @db.Uuid
+  message     String                @db.VarChar(240)
+  data        Json?
+  readAt      DateTime?             @map("read_at")
+  user        User                  @relation("NotificationRecipient", fields: [userId], references: [id], onDelete: Cascade)
+  actor       User?                 @relation("NotificationActor", fields: [actorId], references: [id], onDelete: SetNull)
+  createdAt   DateTime              @default(now()) @map("created_at")
+
+  @@index([userId, readAt, createdAt])
+  @@map("notifications")
+}
+
+model ContentReport {
+  id             String               @id @default(uuid()) @db.Uuid
+  reporterId     String               @map("reporter_id") @db.Uuid
+  contentType    CommunityContentType @map("content_type")
+  contentId      String               @map("content_id") @db.Uuid
+  reason         ReportReason
+  details        String?              @db.VarChar(1000)
+  status         ReportStatus         @default(OPEN)
+  reporter       User                 @relation(fields: [reporterId], references: [id], onDelete: Restrict)
+  moderationCase ModerationCase?
+  createdAt      DateTime             @default(now()) @map("created_at")
+  updatedAt      DateTime             @updatedAt @map("updated_at")
+
+  @@index([status, createdAt])
+  @@index([contentType, contentId])
+  @@map("content_reports")
+}
+
+model ModerationCase {
+  id           String               @id @default(uuid()) @db.Uuid
+  reportId     String?              @unique @map("report_id") @db.Uuid
+  assignedToId String?              @map("assigned_to_id") @db.Uuid
+  contentType  CommunityContentType @map("content_type")
+  contentId    String               @map("content_id") @db.Uuid
+  status       ReportStatus         @default(OPEN)
+  priority     Int                  @default(0)
+  summary      String?              @db.VarChar(500)
+  report       ContentReport?       @relation(fields: [reportId], references: [id], onDelete: SetNull)
+  assignedTo   User?                @relation("AssignedModerator", fields: [assignedToId], references: [id], onDelete: SetNull)
+  notes        ModerationNote[]
+  actions      ModerationAction[]
+  createdAt    DateTime             @default(now()) @map("created_at")
+  updatedAt    DateTime             @updatedAt @map("updated_at")
+  resolvedAt   DateTime?            @map("resolved_at")
+
+  @@index([status, priority, createdAt])
+  @@map("moderation_cases")
+}
+
+model ModerationNote {
+  id        String         @id @default(uuid()) @db.Uuid
+  caseId    String         @map("case_id") @db.Uuid
+  authorId  String         @map("author_id") @db.Uuid
+  body      String         @db.VarChar(2000)
+  case      ModerationCase @relation(fields: [caseId], references: [id], onDelete: Cascade)
+  author    User           @relation(fields: [authorId], references: [id], onDelete: Restrict)
+  createdAt DateTime       @default(now()) @map("created_at")
+
+  @@index([caseId, createdAt])
+  @@map("moderation_notes")
+}
+
+model ModerationAction {
+  id        String               @id @default(uuid()) @db.Uuid
+  caseId    String               @map("case_id") @db.Uuid
+  actorId   String               @map("actor_id") @db.Uuid
+  action    ModerationActionType
+  reason    String?              @db.VarChar(1000)
+  metadata  Json?
+  case      ModerationCase       @relation(fields: [caseId], references: [id], onDelete: Cascade)
+  actor     User                 @relation(fields: [actorId], references: [id], onDelete: Restrict)
+  createdAt DateTime             @default(now()) @map("created_at")
+
+  @@index([caseId, createdAt])
+  @@map("moderation_actions")
+}
+
+model UserSanction {
+  id         String           @id @default(uuid()) @db.Uuid
+  userId     String           @map("user_id") @db.Uuid
+  issuedById String           @map("issued_by_id") @db.Uuid
+  type       UserSanctionType
+  status     SanctionStatus   @default(ACTIVE)
+  reason     String           @db.VarChar(1000)
+  expiresAt  DateTime?        @map("expires_at")
+  user       User             @relation("SanctionedUser", fields: [userId], references: [id], onDelete: Cascade)
+  issuedBy   User             @relation("SanctionIssuer", fields: [issuedById], references: [id], onDelete: Restrict)
+  createdAt  DateTime         @default(now()) @map("created_at")
+  revokedAt  DateTime?        @map("revoked_at")
+
+  @@index([userId, status, expiresAt])
+  @@map("user_sanctions")
+}
+
+model Lead {
+  id               String     @id @default(uuid()) @db.Uuid
+  status           LeadStatus @default(NEW)
+  city             String     @db.VarChar(100)
+  district         String?    @db.VarChar(100)
+  eventType        String     @map("event_type") @db.VarChar(120)
+  eventDate        DateTime?  @map("event_date") @db.Date
+  guestCount       Int?       @map("guest_count")
+  budget           Decimal?   @db.Decimal(12, 2)
+  conceptId        String?    @map("concept_id") @db.Uuid
+  contactHash      String     @map("contact_hash") @db.VarChar(128)
+  encryptedContact String     @map("encrypted_contact") @db.Text
+  notes            String?    @db.VarChar(2000)
+  consentAt        DateTime   @map("consent_at")
+  createdAt        DateTime   @default(now()) @map("created_at")
+  updatedAt        DateTime   @updatedAt @map("updated_at")
+
+  @@index([status, city, createdAt])
+  @@index([conceptId])
+  @@map("leads")
+}
+
+model FeatureFlag {
+  key         String   @id @db.VarChar(100)
+  enabled     Boolean  @default(false)
+  description String?  @db.VarChar(300)
+  rules       Json?
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@map("feature_flags")
+}
+
+model AuditLog {
+  id         String   @id @default(uuid()) @db.Uuid
+  actorId    String?  @map("actor_id") @db.Uuid
+  action     String   @db.VarChar(120)
+  entityType String?  @map("entity_type") @db.VarChar(80)
+  entityId   String?  @map("entity_id") @db.Uuid
+  requestId  String?  @map("request_id") @db.VarChar(100)
+  metadata   Json?
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  @@index([actorId, createdAt])
+  @@index([entityType, entityId, createdAt])
+  @@map("audit_logs")
+}
+
+/// One-time tokens for e-mail verification and password reset (hash stored, raw value mailed).
+enum AuthTokenKind {
+  EMAIL_VERIFY
+  PASSWORD_RESET
+}
+
+model AuthToken {
+  id        String        @id @default(uuid()) @db.Uuid
+  userId    String        @map("user_id") @db.Uuid
+  kind      AuthTokenKind
+  tokenHash String        @unique @map("token_hash") @db.VarChar(128)
+  expiresAt DateTime      @map("expires_at")
+  usedAt    DateTime?     @map("used_at")
+  createdAt DateTime      @default(now()) @map("created_at")
+  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, kind, createdAt])
+  @@map("auth_tokens")
+}
+
+/// External identity providers linked to a User. Only identity (provider + subject) is stored:
+/// no access/refresh tokens, because Konsepthane never calls provider APIs on the user's behalf.
+enum OAuthProvider {
+  GOOGLE
+}
+
+model OAuthAccount {
+  id                String        @id @default(uuid()) @db.Uuid
+  userId            String        @map("user_id") @db.Uuid
+  provider          OAuthProvider
+  /// Stable subject id from the provider (Google `sub`), never the e-mail.
+  providerAccountId String        @map("provider_account_id") @db.VarChar(255)
+  /// E-mail as reported by the provider at link time (informational; the User e-mail is canonical).
+  email             String?       @db.VarChar(320)
+  createdAt         DateTime      @default(now()) @map("created_at")
+  updatedAt         DateTime      @updatedAt @map("updated_at")
+  user              User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@unique([userId, provider])
+  @@map("oauth_accounts")
+}

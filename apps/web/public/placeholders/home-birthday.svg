@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 675" role="img" aria-labelledby="title desc">
+  <title id="title">Evde sade doğum günü düzeni</title>
+  <desc id="desc">Bej, mercan ve adaçayı tonlarında masa, flama ve pasta illüstrasyonu</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" x2="1" y1="0" y2="1"><stop stop-color="#f5e7da"/><stop offset="1" stop-color="#dce8d4"/></linearGradient>
+    <filter id="shadow"><feDropShadow dx="0" dy="12" stdDeviation="14" flood-color="#6f5646" flood-opacity=".15"/></filter>
+  </defs>
+  <rect width="1200" height="675" fill="url(#bg)"/>
+  <path d="M115 105 Q600 250 1085 105" fill="none" stroke="#8e5d58" stroke-width="5"/>
+  <g fill="#be7067"><path d="M180 124l45 12-34 35z"/><path d="M345 168l47 3-27 42z"/><path d="M525 198l48-3-20 45z"/></g>
+  <g fill="#718b6c"><path d="M675 196l48 3-26 41z"/><path d="M850 162l47-8-18 46z"/><path d="M1015 118l44-14-8 48z"/></g>
+  <rect x="180" y="468" width="840" height="44" rx="22" fill="#b99676" filter="url(#shadow)"/>
+  <path d="M235 510h72l-18 165h-36zm658 0h72l-18 165h-36z" fill="#947255"/>
+  <g filter="url(#shadow)"><ellipse cx="600" cy="455" rx="145" ry="26" fill="#f7f0e7"/><rect x="480" y="355" width="240" height="100" rx="22" fill="#fffaf4"/><path d="M480 395h240" stroke="#d99b90" stroke-width="14"/><rect x="518" y="295" width="164" height="70" rx="17" fill="#fffaf4"/><circle cx="600" cy="278" r="18" fill="#e4b75f"/></g>
+  <g fill="#708b6c"><ellipse cx="340" cy="418" rx="55" ry="18"/><path d="M340 415c-45-80-15-126 12-143 11 65 10 106-12 143zm1 0c56-59 96-36 112-15-43 24-75 29-112 15z"/><ellipse cx="860" cy="418" rx="55" ry="18"/><path d="M860 415c45-80 15-126-12-143-11 65-10 106 12 143zm-1 0c-56-59-96-36-112-15 43 24 75 29 112 15z"/></g>
+  <text x="600" y="590" text-anchor="middle" font-family="Georgia,serif" font-size="34" fill="#56433a">Topluluk deneyimi</text>
+</svg>

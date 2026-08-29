@@ -1,0 +1,31 @@
+# dependencies / build output
+node_modules/
+.next/
+dist/
+coverage/
+.turbo/
+*.tsbuildinfo
+packages/database/src/generated/
+
+# environment & secrets — only the templates are versioned
+.env
+.env.*
+!.env.example
+!.env.production.example
+
+# runtime data
+uploads/
+infra/certbot/
+infra/letsencrypt/
+backups/
+*.log
+*.zip
+
+# tooling
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+playwright-report/
+test-results/
+.claude/

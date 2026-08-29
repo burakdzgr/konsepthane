@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 900" role="img" aria-labelledby="title desc">
+  <title id="title">Ayıcık temalı ilk yaş doğum günü konsepti</title>
+  <desc id="desc">Krem fon, kahve balonlar, pasta masası ve ayıcık figürü bulunan sıcak bir kutlama illüstrasyonu.</desc>
+  <defs><linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#f7efe4"/><stop offset="1" stop-color="#dcc9ae"/></linearGradient></defs>
+  <rect width="1200" height="900" fill="url(#bg)"/>
+  <circle cx="190" cy="175" r="82" fill="#ead8bd"/><circle cx="270" cy="120" r="62" fill="#a98a69"/><circle cx="1060" cy="190" r="98" fill="#cab18e"/><circle cx="970" cy="95" r="58" fill="#f2e8d8"/>
+  <path d="M210 900V290Q210 195 305 195H895Q990 195 990 290V900" fill="#f7f0e6" stroke="#fff" stroke-width="14"/>
+  <rect x="270" y="590" width="660" height="44" rx="22" fill="#8a694f"/><rect x="320" y="625" width="44" height="275" fill="#72513b"/><rect x="836" y="625" width="44" height="275" fill="#72513b"/>
+  <ellipse cx="600" cy="555" rx="112" ry="35" fill="#d5b993"/><rect x="512" y="430" width="176" height="132" rx="28" fill="#fffaf1"/><path d="M512 485h176" stroke="#c8aa82" stroke-width="10"/>
+  <circle cx="600" cy="330" r="92" fill="#a77f59"/><circle cx="535" cy="265" r="38" fill="#a77f59"/><circle cx="665" cy="265" r="38" fill="#a77f59"/><ellipse cx="600" cy="360" rx="52" ry="42" fill="#e7cba6"/><circle cx="583" cy="325" r="8" fill="#46352a"/><circle cx="617" cy="325" r="8" fill="#46352a"/><path d="M585 369q15 17 30 0" fill="none" stroke="#46352a" stroke-width="7" stroke-linecap="round"/>
+  <text x="600" y="735" text-anchor="middle" font-family="Georgia,serif" font-size="66" fill="#5e4939">bir yaşın kutlu olsun</text>
+  <text x="600" y="802" text-anchor="middle" font-family="Arial,sans-serif" font-size="28" letter-spacing="8" fill="#8a745f">AYICIK KONSEPTİ</text>
+</svg>

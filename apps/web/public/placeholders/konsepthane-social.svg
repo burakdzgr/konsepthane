@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" role="img" aria-labelledby="title desc">
+  <title id="title">Konsepthane</title>
+  <desc id="desc">Kutlama konseptleri, gerçek deneyimler ve uygulanabilir rehberler</desc>
+  <rect width="1200" height="630" fill="#fffaf6"/>
+  <circle cx="1030" cy="95" r="230" fill="#f8dfe1"/>
+  <circle cx="1040" cy="580" r="290" fill="#e5efe6"/>
+  <circle cx="110" cy="570" r="220" fill="#f2e8d9"/>
+  <rect x="96" y="105" width="116" height="116" rx="30" fill="#8d3f4c"/>
+  <path d="M126 132h18v35l34-35h24l-39 40 42 46h-25l-36-40v40h-18z" fill="#fffaf6"/>
+  <text x="96" y="320" fill="#2f2525" font-family="Arial, sans-serif" font-size="82" font-weight="700">konsepthane.</text>
+  <text x="100" y="388" fill="#695c5c" font-family="Arial, sans-serif" font-size="30">uygulanabilir fikirler · gerçek deneyimler</text>
+  <path d="m963 194 15 53 53 15-53 15-15 53-15-53-53-15 53-15z" fill="#8d3f4c" opacity=".9"/>
+</svg>

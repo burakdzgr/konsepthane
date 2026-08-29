@@ -1,0 +1,96 @@
+# Production overlay — use together with the base file:
+#   docker compose -f compose.yaml -f compose.prod.yaml up -d --build
+# Replaces dev commands with built images, binds app ports to localhost only (nginx is the only
+# public entry point), adds TLS (certbot) and daily PostgreSQL backups.
+services:
+  api:
+    build: { context: ., dockerfile: infra/docker/Dockerfile, args: { APP: api } }
+    ports: ['127.0.0.1:${API_PORT:-4000}:4000']
+    restart: always
+    # MinIO is a dev-only service; production uses an external S3-compatible bucket.
+    depends_on: !override
+      migrate: { condition: service_completed_successfully }
+      redis: { condition: service_healthy }
+
+  worker:
+    build: { context: ., dockerfile: infra/docker/Dockerfile, args: { APP: worker } }
+    ports: ['127.0.0.1:${WORKER_PORT:-4001}:4001']
+    restart: always
+
+  web:
+    build: { context: ., dockerfile: infra/docker/Dockerfile, args: { APP: web } }
+    ports: ['127.0.0.1:${WEB_PORT:-3000}:3000']
+    restart: always
+
+  admin:
+    build: { context: ., dockerfile: infra/docker/Dockerfile, args: { APP: admin } }
+    ports: ['127.0.0.1:${ADMIN_PORT:-3001}:3001']
+    restart: always
+
+  migrate:
+    build: { context: ., dockerfile: infra/docker/Dockerfile, args: { APP: api } }
+    command: sh -c "pnpm db:deploy"
+
+  # Dev-only helpers are not started in production.
+  mailpit:
+    profiles: ['dev']
+  minio:
+    profiles: ['dev']
+  minio-init:
+    profiles: ['dev']
+
+  postgres:
+    ports: []  # never expose the database publicly
+    restart: always
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+
+  redis:
+    ports: []
+    restart: always
+
+  meilisearch:
+    ports: []
+    restart: always
+
+  nginx:
+    image: nginx:1.29-alpine
+    ports: ['80:80', '443:443']
+    volumes:
+      - ./infra/nginx/nginx.prod.conf:/etc/nginx/nginx.conf:ro
+      - certbot-etc:/etc/letsencrypt:ro
+      - certbot-www:/var/www/certbot:ro
+    restart: always
+
+  certbot:
+    image: certbot/certbot:latest
+    volumes:
+      - certbot-etc:/etc/letsencrypt
+      - certbot-www:/var/www/certbot
+    # Renews twice a day; nginx picks up new certificates on reload (see docs/PRODUCTION_SETUP.md).
+    entrypoint: sh -c "trap exit TERM; while :; do certbot renew --webroot -w /var/www/certbot --quiet; sleep 12h & wait $${!}; done"
+    restart: always
+
+  postgres-backup:
+    image: prodrigestivill/postgres-backup-local:17
+    depends_on: { postgres: { condition: service_healthy } }
+    volumes:
+      - ./backups:/backups
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_DB: ${POSTGRES_DB:-ilham}
+      POSTGRES_USER: ${POSTGRES_USER:-ilham}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_EXTRA_OPTS: '-Z6 --schema=public --blobs'
+      SCHEDULE: ${BACKUP_SCHEDULE:-@daily}
+      BACKUP_KEEP_DAYS: ${BACKUP_KEEP_DAYS:-14}
+      BACKUP_KEEP_WEEKS: ${BACKUP_KEEP_WEEKS:-8}
+      BACKUP_KEEP_MONTHS: ${BACKUP_KEEP_MONTHS:-6}
+      HEALTHCHECK_PORT: 8080
+    networks: [backend]
+    restart: always
+
+volumes:
+  postgres-data:
+  certbot-etc:
+  certbot-www:

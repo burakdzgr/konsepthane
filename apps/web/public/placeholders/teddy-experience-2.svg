@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 760" role="img" aria-label="Butik salonda ayıcık temalı pasta ve balon köşesi">
+  <rect width="1000" height="760" fill="#d9ccb9"/><path d="M160 760V175q0-85 85-85h510q85 0 85 85v585" fill="#f6efe5"/>
+  <g fill="#c4a27d"><circle cx="770" cy="160" r="72"/><circle cx="840" cy="225" r="58"/><circle cx="740" cy="250" r="52"/></g><g fill="#f0dfca"><circle cx="835" cy="115" r="45"/><circle cx="885" cy="180" r="38"/></g>
+  <rect x="245" y="505" width="510" height="35" rx="17" fill="#836044"/><rect x="290" y="540" width="35" height="220" fill="#6d4c36"/><rect x="675" y="540" width="35" height="220" fill="#6d4c36"/>
+  <rect x="425" y="385" width="150" height="125" rx="22" fill="#fffaf1"/><circle cx="500" cy="295" r="65" fill="#9d7553"/><circle cx="455" cy="250" r="28" fill="#9d7553"/><circle cx="545" cy="250" r="28" fill="#9d7553"/><ellipse cx="500" cy="315" rx="36" ry="28" fill="#e8cca8"/>
+  <text x="500" y="690" text-anchor="middle" font-family="Georgia,serif" font-size="44" fill="#5d4737">krem · bej · kakao</text>
+</svg>

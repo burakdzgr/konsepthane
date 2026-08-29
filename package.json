@@ -1,0 +1,40 @@
+{
+  "name": "konsepthane-platform",
+  "version": "0.1.0",
+  "private": true,
+  "packageManager": "pnpm@10.15.1",
+  "engines": {
+    "node": ">=22.12.0",
+    "pnpm": ">=10.0.0"
+  },
+  "scripts": {
+    "dev": "turbo dev",
+    "build": "turbo build",
+    "lint": "turbo lint",
+    "typecheck": "turbo typecheck",
+    "test": "turbo test",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "db:generate": "pnpm --filter @ilham/database generate",
+    "db:migrate": "pnpm --filter @ilham/database migrate",
+    "db:deploy": "pnpm --filter @ilham/database migrate:deploy",
+    "db:seed": "pnpm --filter @ilham/database seed",
+    "db:reset:launch": "pnpm --filter @ilham/database reset:launch",
+    "seo:audit": "node scripts/seo-audit.mjs",
+    "seo:render": "node scripts/seo-render-check.mjs",
+    "seo:schema": "node scripts/seo-schema-check.mjs",
+    "seo:cwv": "node scripts/seo-cwv.mjs",
+    "check": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm test && pnpm build"
+  },
+  "devDependencies": {
+    "@eslint/js": "9.39.1",
+    "@types/node": "22.18.3",
+    "eslint": "9.39.1",
+    "eslint-config-prettier": "10.1.8",
+    "globals": "16.3.0",
+    "prettier": "3.6.2",
+    "turbo": "2.5.6",
+    "typescript": "5.9.2",
+    "typescript-eslint": "8.43.0"
+  }
+}

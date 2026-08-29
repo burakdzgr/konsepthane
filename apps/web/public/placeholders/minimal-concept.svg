@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 900" role="img" aria-labelledby="title desc">
+  <title id="title">Minimal bej ev kutlaması</title>
+  <desc id="desc">Keten fon, sade pasta masası ve adaçayı detaylı minimal doğum günü illüstrasyonu</desc>
+  <rect width="1200" height="900" fill="#eee8de"/>
+  <rect x="90" y="80" width="1020" height="720" rx="52" fill="#f8f3eb"/>
+  <path d="M260 615h680v96H260z" fill="#b99c79"/>
+  <path d="M315 310h570v310H315z" fill="#e3d4c2"/>
+  <path d="M360 340h480v280H360z" fill="#f4ede2"/>
+  <circle cx="445" cy="420" r="74" fill="#aab39a"/>
+  <circle cx="755" cy="410" r="58" fill="#c6a597"/>
+  <circle cx="680" cy="505" r="44" fill="#d4c2ad"/>
+  <path d="M530 545h140v74H530z" fill="#fffaf3"/>
+  <path d="M552 480h96v68H552z" fill="#d9b89d"/>
+  <path d="M575 452h50v30h-50z" fill="#8f745c"/>
+  <path d="M390 620h420" stroke="#806b58" stroke-width="10" stroke-linecap="round"/>
+  <g fill="#6f7e64">
+    <path d="M220 650c45-120 92-168 145-188-15 84-52 149-145 188z"/>
+    <path d="M980 650c-45-120-92-168-145-188 15 84 52 149 145 188z"/>
+  </g>
+  <text x="600" y="225" text-anchor="middle" fill="#594a40" font-family="Georgia,serif" font-size="58">sade bir kutlama</text>
+  <text x="600" y="765" text-anchor="middle" fill="#796b61" font-family="Arial,sans-serif" font-size="26" letter-spacing="5">MİNİMAL · EVDE · SICAK BEJ</text>
+</svg>
