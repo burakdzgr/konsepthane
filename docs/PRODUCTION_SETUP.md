@@ -11,10 +11,10 @@ kurulum tamamlanamaz.
 | 1 | **Sunucu**: Ubuntu 22.04/24.04, ≥2 vCPU / 4 GB RAM / 40 GB disk, Docker + Compose kurulu, SSH erişimi | Uygulama Docker ile çalışır | Hetzner CX22, DigitalOcean 4 GB |
 | 2 | **Alan adı DNS yetkisi** (konsepthane.net) | A/AAAA kayıtları | Registrar/Cloudflare paneli |
 | 3 | **DNS kayıtları**: `konsepthane.net` → sunucu IP (A), `www` → aynı IP (A veya CNAME) | TLS ve yönlendirme | `A @ 1.2.3.4`, `A www 1.2.3.4` |
-| 4 | **Let's Encrypt e-postası** | Sertifika bildirimleri | teknik@konsepthane.net |
-| 5 | **SMTP bilgileri** `noreply@konsepthane.net` için (host, port, parola; kullanıcı adı çoğu sağlayıcıda adresin kendisi) | Doğrulama / parola sıfırlama e-postaları | Yandex 360, Google Workspace, Zoho, Brevo… |
+| 4 | ~~Let's Encrypt~~ — TLS'i Plesk veriyor | — | — |
+| 5 | **Brevo SMTP**: `smtp-relay.brevo.com:587`, SMTP login + SMTP key; `noreply@konsepthane.net` sender, domain authenticated (SPF/DKIM/DMARC) | Doğrulama / parola sıfırlama e-postaları | `info@` Plesk posta kutusu olarak kalır |
 | 6 | **E-posta alan adı doğrulaması**: SPF, DKIM, DMARC kayıtları (sağlayıcı verir) | Mailler spam'e düşmesin | `TXT @ v=spf1 include:…` |
-| 7 | **Nesne depolama** (S3 uyumlu): AWS S3 / Cloudflare R2 / DO Spaces — bucket adı, anahtarlar, public URL/CDN | Yüklenen görseller | `media.konsepthane.net` CNAME → CDN |
+| 7 | **Cloudflare R2**: bucket `konsepthane-media`, API token (Access Key ID / Secret), public custom domain `media.konsepthane.net` | Yüklenen görseller | `S3_ENDPOINT=https://<account>.r2.cloudflarestorage.com` |
 | 8 | ~~Şirket bilgileri~~ — karar: unvan/adres yayınlanmaz, yayıncı kimliği `konsepthane.net`; iletişim `info@konsepthane.net`, OTP/parola e-postaları `noreply@konsepthane.net` | Yasal sayfalar, JSON-LD | `.env`'de hazır |
 | 9 | ~~GA4 ölçüm kimliği~~ — `G-0Q7XW1FPLN` tanımlandı; yalnızca çerez onayı sonrası yüklenir | Analitik | `NEXT_PUBLIC_GA_ID` |
 | 10 | (İsteğe bağlı) Sosyal profil URL'leri | `Organization.sameAs` | Instagram, Pinterest |
@@ -22,38 +22,49 @@ kurulum tamamlanamaz.
 Alternatif: sunucu yerine yönetilen platform (Coolify, Railway, Render) kullanılacaksa aynı env
 listesi geçerlidir; nginx/certbot adımları platformun TLS'i ile değişir.
 
-## 1. Sunucu hazırlığı
+## 1. Kurulum şekli (Plesk ile aynı sunucu)
+
+Sunucuda Plesk'in nginx'i 80/443'ü ve TLS'i (Let's Encrypt eklentisi) yönetir; Cloudflare proxy
+öndedir. Proje Docker'da, yalnızca `127.0.0.1`'e bağlı portlarda çalışır ve Plesk `konsepthane.net`
+isteklerini projenin kendi nginx'ine (`127.0.0.1:8180`) proxy'ler. Public URL'ler değişmez.
+
+| Host portu | Servis |
+| --- | --- |
+| `127.0.0.1:8180` | proje nginx'i (web/admin/api yönlendirmesi) — `NGINX_PORT` |
+| `127.0.0.1:3210 / 3211 / 4010 / 4011` | web / admin / api / worker (`*_PORT`) |
+| — | postgres, redis, meilisearch host'a bağlanmaz |
+
+Medya Cloudflare R2'de (`media.konsepthane.net`), e-posta Brevo SMTP'de; MinIO/Mailpit yalnızca
+`dev` profilinde. `NEXT_PUBLIC_*` değerleri `compose.prod.yaml` build arg'larıyla Next.js
+bundle'ına derlenir — bu değerler değişirse `infra/deploy/update.sh` (yeniden build) gerekir.
+
+## 2. İlk kurulum
 
 ```bash
-apt update && apt install -y docker.io docker-compose-plugin git ufw
-ufw allow OpenSSH && ufw allow 80 && ufw allow 443 && ufw enable
-git clone <repo> /srv/konsepthane && cd /srv/konsepthane
-cp .env.production.example .env   # tüm CHANGE_ME alanlarını doldur
-openssl rand -base64 48            # JWT_ACCESS_SECRET, JWT_REFRESH_SECRET, MEILISEARCH_MASTER_KEY için ayrı ayrı
+# sunucuda (root)
+git clone <repo> /opt/konsepthane && cd /opt/konsepthane
+# yerelde hazırlanan .env.production dosyasını .env olarak kopyalayın (scp) — asla repo'ya girmez
+docker builder prune -f && docker image prune -f      # yer açmak için (diğer projelerin çalışan imajlarına dokunmaz)
+./infra/deploy/install.sh
 ```
 
-## 2. İlk sertifika (nginx ayağa kalkmadan önce)
+`install.sh`: `.env`'deki boş alanları ve port çakışmalarını kontrol eder, imajları sırayla derler
+(RAM için), `up -d` yapar, api sağlıklı olana kadar bekler, kullanıcı tablosu boşsa `reset:launch`
+ile admin'i (`ADMIN_USERNAME` / `ADMIN_EMAIL` / `ADMIN_PASSWORD`) oluşturur.
 
-```bash
-docker compose -f compose.yaml -f compose.prod.yaml run --rm -p 80:80 --entrypoint sh certbot -c \
-  "certbot certonly --standalone -d konsepthane.net -d www.konsepthane.net --email $LETSENCRYPT_EMAIL --agree-tos --no-eff-email"
-```
+## 3. Plesk tarafı
 
-Sertifika `certbot-etc` volume'una yazılır; `certbot` servisi 12 saatte bir yeniler. Yenileme sonrası
-nginx'i yeniden yükle: `docker compose -f compose.yaml -f compose.prod.yaml exec nginx nginx -s reload`
-(cron'a `0 4 * * *` olarak eklenebilir).
+Websites & Domains → `konsepthane.net` → **Apache & nginx Settings**:
+- **Proxy mode**: kapalı (nginx doğrudan servis etsin)
+- **Smart static files processing**: kapalı (aksi halde `/_next/static` Plesk'ten 404 döner)
+- **Additional nginx directives**: `infra/plesk/nginx-directives.conf` içeriğini yapıştırın
+  (`location / { proxy_pass http://127.0.0.1:8180; … }`)
 
-## 3. Uygulamayı başlatma
+SSL/TLS Certificates → Let's Encrypt → `konsepthane.net` + `www` (Cloudflare proxy açıkken de
+HTTP-01 çalışır) → "Permanent SEO-safe 301 redirect from HTTP to HTTPS" açık. Cloudflare → SSL/TLS
+→ **Full (strict)**. `www` → apex yönlendirmesini proje nginx'i de yapar.
 
-```bash
-docker compose -f compose.yaml -f compose.prod.yaml up -d --build
-# migrate servisi sadece `pnpm db:deploy` çalıştırır (örnek veri seed'i yok)
-CONFIRM_RESET=yes ADMIN_EMAIL=admin@konsepthane.net ADMIN_USERNAME=konsepthane ADMIN_PASSWORD='…' \
-  docker compose -f compose.yaml -f compose.prod.yaml exec migrate pnpm --filter @ilham/database reset:launch
-```
-
-`reset:launch` yalnızca **ilk kurulumda** (boş veritabanı) çalıştırılır. Sonrasında admin
-panelinden içerik girin: https://konsepthane.net/admin/giris (kullanıcı adı `konsepthane`).
+Güncelleme: `./infra/deploy/update.sh` (git pull → build → up; migrasyonlar `migrate` servisinde).
 
 ## 4. Doğrulama
 
@@ -130,8 +141,11 @@ custom banner kaldırıldı. Diyalog sayfaya enjekte edildiği için görünüm�
 Kurulum (https://www.cookiebot.com):
 1. Hesap aç → Domain: `konsepthane.net` (ve yerel test için `localhost`) → **Domain Group ID**'yi
    `.env` → `NEXT_PUBLIC_COOKIEBOT_ID` olarak gir (public bir kimliktir, secret değildir).
-2. Dashboard → *Dialog*: şablon **Custom** (tema CSS'imizin ezilmemesi için), dil **Türkçe**
-   (`data-culture` sayfa diline göre gönderilir), "Reddet" butonu **açık** (GDPR: red kabul kadar kolay).
+2. Dashboard → *Dialog*: **hazır şablon** kullanın (Template: **Default** — çok seviyeli diyalog);
+   **"Custom banner" seçmeyin** (o seçenek banner HTML'ini sıfırdan yazmanızı ister). Renk/yazı tipi
+   alanlarını varsayılan bırakın; site CSS'i `#CybotCookiebotDialog` markup'ını kendi tasarımına boyar.
+   Dil **Türkçe** (`data-culture` sayfa diline göre gönderilir), "Reddet" butonu **açık** (GDPR: red kabul
+   kadar kolay), Consent Method **Explicit Consent**.
 3. *Settings → Google Consent Mode*: **etkin** — Cookiebot `analytics_storage`, `ad_storage`,
    `ad_user_data`, `ad_personalization` sinyallerini kullanıcının kategori seçimine göre kendisi
    gönderir; sayfa `<head>`'i tüm sinyalleri `denied` ile başlatır (`wait_for_update: 500`).

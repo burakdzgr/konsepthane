@@ -1,37 +1,80 @@
 # Production overlay — use together with the base file:
 #   docker compose -f compose.yaml -f compose.prod.yaml up -d --build
-# Replaces dev commands with built images, binds app ports to localhost only (nginx is the only
-# public entry point), adds TLS (certbot) and daily PostgreSQL backups.
+#
+# Deployment shape (Plesk host): Plesk's nginx owns 80/443 and TLS (Let's Encrypt) and proxies
+# `konsepthane.net` to the project's own nginx on 127.0.0.1:${NGINX_PORT}. Every other app port is
+# bound to localhost only; databases are never bound to the host. Media lives in Cloudflare R2
+# (public host media.konsepthane.net), e-mail goes out through Brevo SMTP — MinIO/Mailpit are
+# dev-only here.
+#
+# NEXT_PUBLIC_* values are compiled into the Next.js bundles, so they are passed as build args
+# (from .env) in addition to the runtime env_file.
+x-build-args: &build-args
+  WEB_URL: ${WEB_URL}
+  NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
+  NEXT_PUBLIC_MEDIA_URL: ${NEXT_PUBLIC_MEDIA_URL}
+  NEXT_PUBLIC_GA_ID: ${NEXT_PUBLIC_GA_ID:-}
+  NEXT_PUBLIC_COOKIEBOT_ID: ${NEXT_PUBLIC_COOKIEBOT_ID:-}
+  NEXT_PUBLIC_LEGAL_NAME: ${NEXT_PUBLIC_LEGAL_NAME:-konsepthane.net}
+  NEXT_PUBLIC_CONTACT_EMAIL: ${NEXT_PUBLIC_CONTACT_EMAIL:-info@konsepthane.net}
+  NEXT_PUBLIC_PRIVACY_EMAIL: ${NEXT_PUBLIC_PRIVACY_EMAIL:-info@konsepthane.net}
+  NEXT_PUBLIC_CITY: ${NEXT_PUBLIC_CITY:-}
+  NEXT_PUBLIC_SOCIAL_INSTAGRAM: ${NEXT_PUBLIC_SOCIAL_INSTAGRAM:-}
+  NEXT_PUBLIC_SOCIAL_PINTEREST: ${NEXT_PUBLIC_SOCIAL_PINTEREST:-}
+  NEXT_PUBLIC_SOCIAL_YOUTUBE: ${NEXT_PUBLIC_SOCIAL_YOUTUBE:-}
+  NEXT_PUBLIC_SOCIAL_X: ${NEXT_PUBLIC_SOCIAL_X:-}
+  NEXT_PUBLIC_SOCIAL_LINKEDIN: ${NEXT_PUBLIC_SOCIAL_LINKEDIN:-}
+
+# The base file hard-codes local Docker endpoints (MinIO, Mailpit) in `environment:`, which would
+# win over .env — production re-points them at the real services declared in .env.
+x-prod-env: &prod-env
+  NODE_ENV: production
+  S3_ENDPOINT: ${S3_ENDPOINT}
+  S3_REGION: ${S3_REGION:-auto}
+  S3_BUCKET: ${S3_BUCKET}
+  S3_FORCE_PATH_STYLE: ${S3_FORCE_PATH_STYLE:-true}
+  MEDIA_PUBLIC_URL: ${MEDIA_PUBLIC_URL}
+  NEXT_PUBLIC_MEDIA_URL: ${NEXT_PUBLIC_MEDIA_URL}
+  INTERNAL_MEDIA_URL: ${INTERNAL_MEDIA_URL:-}
+  SMTP_HOST: ${SMTP_HOST}
+  SMTP_PORT: ${SMTP_PORT:-587}
+  SMTP_SECURE: ${SMTP_SECURE:-false}
+  MEILI_ENV: production
+
 services:
   api:
-    build: { context: ., dockerfile: infra/docker/Dockerfile, args: { APP: api } }
-    ports: ['127.0.0.1:${API_PORT:-4000}:4000']
+    build: { context: ., dockerfile: infra/docker/Dockerfile, args: { APP: api, <<: *build-args } }
+    environment: *prod-env
+    ports: ['127.0.0.1:${API_PORT:-4010}:4000']
     restart: always
-    # MinIO is a dev-only service; production uses an external S3-compatible bucket.
     depends_on: !override
       migrate: { condition: service_completed_successfully }
       redis: { condition: service_healthy }
 
   worker:
-    build: { context: ., dockerfile: infra/docker/Dockerfile, args: { APP: worker } }
-    ports: ['127.0.0.1:${WORKER_PORT:-4001}:4001']
+    build: { context: ., dockerfile: infra/docker/Dockerfile, args: { APP: worker, <<: *build-args } }
+    environment: *prod-env
+    ports: ['127.0.0.1:${WORKER_PORT:-4011}:4001']
     restart: always
 
   web:
-    build: { context: ., dockerfile: infra/docker/Dockerfile, args: { APP: web } }
-    ports: ['127.0.0.1:${WEB_PORT:-3000}:3000']
+    build: { context: ., dockerfile: infra/docker/Dockerfile, args: { APP: web, <<: *build-args } }
+    environment: *prod-env
+    ports: ['127.0.0.1:${WEB_PORT:-3210}:3000']
     restart: always
 
   admin:
-    build: { context: ., dockerfile: infra/docker/Dockerfile, args: { APP: admin } }
-    ports: ['127.0.0.1:${ADMIN_PORT:-3001}:3001']
+    build: { context: ., dockerfile: infra/docker/Dockerfile, args: { APP: admin, <<: *build-args } }
+    environment: *prod-env
+    ports: ['127.0.0.1:${ADMIN_PORT:-3211}:3001']
     restart: always
 
   migrate:
-    build: { context: ., dockerfile: infra/docker/Dockerfile, args: { APP: api } }
+    build: { context: ., dockerfile: infra/docker/Dockerfile, args: { APP: api, <<: *build-args } }
+    environment: *prod-env
     command: sh -c "pnpm db:deploy"
 
-  # Dev-only helpers are not started in production.
+  # Dev-only helpers are not started in production (R2 + Brevo replace them).
   mailpit:
     profiles: ['dev']
   minio:
@@ -40,35 +83,28 @@ services:
     profiles: ['dev']
 
   postgres:
-    ports: []  # never expose the database publicly
+    ports: !override [] # never expose the database on the host
     restart: always
     volumes:
       - postgres-data:/var/lib/postgresql/data
 
   redis:
-    ports: []
+    ports: !override []
     restart: always
 
   meilisearch:
-    ports: []
+    ports: !override []
+    environment:
+      MEILI_ENV: production
     restart: always
 
+  # Project router (web / admin / api / static caching). Plain HTTP on localhost; Plesk nginx in
+  # front terminates TLS and forwards Host + X-Forwarded-* headers.
   nginx:
     image: nginx:1.29-alpine
-    ports: ['80:80', '443:443']
+    ports: !override ['127.0.0.1:${NGINX_PORT:-8180}:80']
     volumes:
       - ./infra/nginx/nginx.prod.conf:/etc/nginx/nginx.conf:ro
-      - certbot-etc:/etc/letsencrypt:ro
-      - certbot-www:/var/www/certbot:ro
-    restart: always
-
-  certbot:
-    image: certbot/certbot:latest
-    volumes:
-      - certbot-etc:/etc/letsencrypt
-      - certbot-www:/var/www/certbot
-    # Renews twice a day; nginx picks up new certificates on reload (see docs/PRODUCTION_SETUP.md).
-    entrypoint: sh -c "trap exit TERM; while :; do certbot renew --webroot -w /var/www/certbot --quiet; sleep 12h & wait $${!}; done"
     restart: always
 
   postgres-backup:
@@ -92,5 +128,3 @@ services:
 
 volumes:
   postgres-data:
-  certbot-etc:
-  certbot-www:

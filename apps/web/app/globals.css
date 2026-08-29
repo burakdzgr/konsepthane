@@ -2194,8 +2194,9 @@ textarea {
 }
 
 /* Cookiebot dialog — themed to the Konsepthane design system --------------------------------
-   Cookiebot injects its own markup + inline styles, hence the specificity/!important. Select the
-   "Custom" template in the Cookiebot dashboard so these rules are not overridden by a theme. */
+   Cookiebot injects its own markup + inline styles, hence the specificity/!important. In the
+   Cookiebot dashboard keep a BUILT-IN template (Dialog → "Default"/multilevel); these rules restyle
+   its #CybotCookiebotDialog markup. Do NOT pick "Custom banner" — that expects hand-written HTML. */
 #CybotCookiebotDialog {
   position: fixed !important;
   inset: auto 1rem 1rem 1rem !important;

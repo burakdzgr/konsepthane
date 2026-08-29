@@ -22,5 +22,15 @@
     "generate": {
       "cache": false
     }
-  }
+  },
+  "globalEnv": [
+    "ADMIN_URL",
+    "API_URL",
+    "INTERNAL_API_URL",
+    "INTERNAL_MEDIA_URL",
+    "MEDIA_PUBLIC_URL",
+    "NEXT_PUBLIC_*",
+    "NODE_ENV",
+    "WEB_URL"
+  ]
 }
