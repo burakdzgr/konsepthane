@@ -142,6 +142,19 @@ export class CommunityController {
     return this.community.toggleQuestionFollow(request.user.sub, id);
   }
 
+  @Get('topics/following/mine')
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
+  followedTopics(@Req() request: AuthenticatedRequest) {
+    return this.community.followedTopics(request.user.sub);
+  }
+  @Post('topics/:id/follow/toggle')
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
+  followTopic(@Req() request: AuthenticatedRequest, @Param('id') id: string) {
+    return this.community.toggleTopicFollow(request.user.sub, id);
+  }
+
   @Post('questions')
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard)

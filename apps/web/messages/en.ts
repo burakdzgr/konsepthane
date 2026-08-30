@@ -98,6 +98,7 @@ export const en: typeof tr = {
     searchLabel: 'What kind of concept are you looking for?',
     searchPlaceholder: 'What are you planning? e.g. first birthday teddy bear',
     searchButton: 'Explore',
+    searchPlaceholderShort: 'Search… e.g. first birthday',
     popularSearches: 'Popular searches',
     chips: [
       '1st Birthday',
@@ -438,6 +439,10 @@ export const en: typeof tr = {
       heading: 'Account settings',
       description: 'Manage how you sign in and which accounts are linked.',
       identity: 'Identity',
+      followedTopics: 'Topics you follow',
+      followedTopicsText: 'Topic hubs you follow; new content there is surfaced in your feed.',
+      followedTopicsEmpty: 'You are not following any topics yet.',
+      browseTopics: 'Browse topics →',
       email: 'E-mail',
       password: 'Password',
       passwordSet: 'Set',
@@ -688,6 +693,8 @@ export const en: typeof tr = {
       emptyText: 'Be the first to post; content tagged with this topic is listed here.',
       contentCount: 'items',
       followerCount: 'followers',
+      follow: 'Follow',
+      following: 'Following',
       searchAll: (name: string) => `Search everything for “${name}”`,
     },
     notFound: {

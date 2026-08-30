@@ -7,6 +7,7 @@ import { absoluteUrl, organizationJsonLd, websiteJsonLd } from '@ilham/seo';
 import { ConceptGrid } from '@/components/concept-discovery';
 import { DiscoveryTabs } from '@/components/home-discovery';
 import { ScrollRow } from '@/components/scroll-row';
+import { HeroSearchInput } from '@/components/hero-search-input';
 import { SmartImage, cardSizes, heroSizes } from '@/components/smart-image';
 import { getCategories, getConcepts } from '@/lib/api';
 import {
@@ -148,11 +149,11 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
               <label htmlFor="home-search" className="sr-only">
                 {t.home.searchLabel}
               </label>
-              <input
+              <HeroSearchInput
                 id="home-search"
                 name="q"
-                type="search"
                 placeholder={t.home.searchPlaceholder}
+                placeholderShort={t.home.searchPlaceholderShort}
               />
               <button className="btn btn-primary">{t.home.searchButton}</button>
             </form>

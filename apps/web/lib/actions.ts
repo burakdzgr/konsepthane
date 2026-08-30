@@ -72,6 +72,26 @@ export async function toggleQuestionFollowAction(formData: FormData) {
   });
 }
 
+/** Topic hub follow toggle used by a client island: returns the new state instead of redirecting. */
+export async function toggleTopicFollowAction(
+  topicId: string,
+): Promise<{ active: boolean; followerCount: number } | { error: string }> {
+  if (!(await hasMemberSession())) return { error: 'unauthenticated' };
+  if (!/^[0-9a-f-]{36}$/i.test(topicId)) return { error: 'invalid' };
+  try {
+    const result = await memberApi<{ active: boolean; followerCount: number }>(
+      `/topics/${topicId}/follow/toggle`,
+      { method: 'POST' },
+    );
+    revalidatePath('/[locale]/konu/[slug]', 'page');
+    revalidatePath('/[locale]/hesap', 'page');
+    return result;
+  } catch (error) {
+    if (error instanceof MemberSessionError) return { error: 'unauthenticated' };
+    return { error: error instanceof Error ? error.message : 'failed' };
+  }
+}
+
 export async function acceptAnswerAction(formData: FormData) {
   const returnTo = safePath(formText(formData, 'returnTo'));
   const questionId = formText(formData, 'questionId');

@@ -159,6 +159,25 @@ export function memberApi<T>(path: string, init: RequestInit = {}) {
   return memberPlatformApi<T>(`/community${path}`, init);
 }
 
+export type FollowedTopic = {
+  id: string;
+  name: string;
+  slug: string;
+  kind: string;
+  contentCount: number;
+  followerCount: number;
+};
+
+/** Topics the signed-in member follows (empty for visitors or when the API is unavailable). */
+export const getFollowedTopics = cache(async (): Promise<FollowedTopic[]> => {
+  if (!(await hasMemberSession())) return [];
+  try {
+    return await memberApi<FollowedTopic[]>('/topics/following/mine');
+  } catch {
+    return [];
+  }
+});
+
 /** Current member summary or null for visitors. Cached per request. */
 export const getMember = cache(async (): Promise<MemberSummary | null> => {
   if (!(await hasMemberSession())) return null;

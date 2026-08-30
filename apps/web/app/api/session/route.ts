@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from 'next/server';
-import { getInteractionState, getMember, getSavedKeys } from '@/lib/auth';
+import { getFollowedTopics, getInteractionState, getMember, getSavedKeys } from '@/lib/auth';
 import { getMyCollections } from '@/lib/community';
 
 export const dynamic = 'force-dynamic';
@@ -14,19 +14,21 @@ export async function GET(request: NextRequest) {
   const member = await getMember();
   const content = request.nextUrl.searchParams.get('content');
   const [contentType, contentId] = content?.split(':') ?? [];
-  const [saved, interaction, collections] = member
+  const [saved, interaction, collections, followedTopics] = member
     ? await Promise.all([
         getSavedKeys(),
         contentType && contentId ? getInteractionState(contentType, contentId) : null,
         contentType && contentId ? getMyCollections() : [],
+        getFollowedTopics(),
       ])
-    : [new Set<string>(), null, []];
+    : [new Set<string>(), null, [], []];
   return NextResponse.json(
     {
       member,
       saved: [...saved],
       interaction,
       collections,
+      followedTopics: followedTopics.map((topic) => topic.slug),
     },
     { headers: { 'Cache-Control': 'private, no-store', Vary: 'Cookie' } },
   );

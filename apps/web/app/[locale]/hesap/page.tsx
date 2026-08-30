@@ -5,7 +5,13 @@ import { Badge, Card } from '@ilham/ui';
 import { AuthRequired } from '@/components/auth-modal';
 import { Flash } from '@/components/engagement';
 import { PageHeader } from '@/components/community-layout';
-import { getLinkedProviders, getMember, requestPasswordSetup, unlinkProvider } from '@/lib/auth';
+import {
+  getFollowedTopics,
+  getLinkedProviders,
+  getMember,
+  requestPasswordSetup,
+  unlinkProvider,
+} from '@/lib/auth';
 import { formText } from '@/lib/form';
 import { asLocale, getDictionary, localeMetadata, localePath } from '@/lib/i18n';
 
@@ -68,7 +74,7 @@ export default async function AccountPage({ params }: { params: Promise<{ locale
       </>
     );
   }
-  const linked = await getLinkedProviders();
+  const [linked, followedTopics] = await Promise.all([getLinkedProviders(), getFollowedTopics()]);
   const google = linked?.providers.find((entry) => entry.provider === 'GOOGLE');
   const hasPassword = linked?.hasPassword ?? true;
   return (
@@ -114,6 +120,28 @@ export default async function AccountPage({ params }: { params: Promise<{ locale
               </dd>
             </div>
           </dl>
+        </Card>
+        <Card className="p-6">
+          <p className="section-eyebrow">{t.followedTopics}</p>
+          <p className="mt-2 text-sm text-[var(--muted)]">{t.followedTopicsText}</p>
+          {followedTopics.length ? (
+            <div className="mt-4 flex flex-wrap gap-2">
+              {followedTopics.map((topic) => (
+                <Link key={topic.id} href={p(`/konu/${topic.slug}`)} className="topic-chip">
+                  <span aria-hidden="true">#</span>
+                  {topic.name}
+                  <span className="text-xs text-[var(--muted)]">{topic.contentCount}</span>
+                </Link>
+              ))}
+            </div>
+          ) : (
+            <p className="mt-4 text-sm">
+              {t.followedTopicsEmpty}{' '}
+              <Link href={p('/konu')} className="font-semibold text-[var(--accent-strong)]">
+                {t.browseTopics}
+              </Link>
+            </p>
+          )}
         </Card>
         <Card className="p-6">
           <p className="section-eyebrow">{t.linkedAccounts}</p>

@@ -1,7 +1,8 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { Breadcrumb, Card, ContentTypeBadge, EmptyState, FollowButton, Icon } from '@ilham/ui';
+import { Breadcrumb, Card, ContentTypeBadge, EmptyState, Icon } from '@ilham/ui';
+import { TopicFollowButton } from '@/components/topic-follow';
 import { absoluteUrl, breadcrumbJsonLd, itemListJsonLd } from '@ilham/seo';
 import { PageHeader } from '@/components/community-layout';
 import { landingPagesForTopic } from '@/content/landing-pages';
@@ -70,7 +71,14 @@ export default async function TopicPage({
         eyebrow={t.eyebrow}
         title={`#${item.name}`}
         description={item.description ?? t.description(item.name)}
-        action={<FollowButton />}
+        action={
+          <TopicFollowButton
+            topicId={item.id}
+            slug={item.slug}
+            next={path}
+            labels={{ follow: t.follow, following: t.following }}
+          />
+        }
       />
       <div className="wrap py-8">
         <Breadcrumb

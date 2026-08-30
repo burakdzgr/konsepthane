@@ -96,6 +96,7 @@ export const tr = {
     searchLabel: 'Nasıl bir konsept arıyorsun?',
     searchPlaceholder: 'Nasıl bir konsept arıyorsun? ör. 1 yaş ayıcık',
     searchButton: 'Keşfet',
+    searchPlaceholderShort: 'Konsept ara… ör. 1 yaş',
     popularSearches: 'Popüler aramalar',
     chips: [
       '1 Yaş',
@@ -444,6 +445,10 @@ export const tr = {
       heading: 'Hesap ayarları',
       description: 'Giriş yöntemlerini ve bağlı hesaplarını buradan yönet.',
       identity: 'Kimlik',
+      followedTopics: 'Takip ettiğin konular',
+      followedTopicsText: 'Takip ettiğin konu başlıkları; yeni içerik geldikçe akışında öne çıkar.',
+      followedTopicsEmpty: 'Henüz bir konu takip etmiyorsun.',
+      browseTopics: 'Konulara göz at →',
       email: 'E-posta',
       password: 'Parola',
       passwordSet: 'Tanımlı',
@@ -698,6 +703,8 @@ export const tr = {
       emptyText: 'İlk paylaşımı sen yapabilirsin; konu etiketi eklediğinde burada listelenir.',
       contentCount: 'içerik',
       followerCount: 'takipçi',
+      follow: 'Takip et',
+      following: 'Takip ediliyor',
       searchAll: (name: string) => `“${name}” için tümünü ara`,
     },
     notFound: {

@@ -514,6 +514,45 @@ export class CommunityService {
     });
   }
 
+  /** Follow / unfollow a topic hub; keeps the denormalised follower counter in step. */
+  async toggleTopicFollow(userId: string, topicId: string) {
+    const topic = await this.db.topic.findUnique({ where: { id: topicId }, select: { id: true } });
+    if (!topic) throw new NotFoundException('Konu bulunamadı.');
+    const key = { topicId_userId: { topicId, userId } };
+    const existing = await this.db.topicFollow.findUnique({ where: key });
+    return this.db.$transaction(async (tx) => {
+      if (existing) await tx.topicFollow.delete({ where: key });
+      else await tx.topicFollow.create({ data: { topicId, userId } });
+      const updated = await tx.topic.update({
+        where: { id: topicId },
+        data: { followerCount: { increment: existing ? -1 : 1 } },
+        select: { followerCount: true },
+      });
+      return { active: !existing, followerCount: Math.max(0, updated.followerCount) };
+    });
+  }
+
+  /** Topics the member follows, newest follow first (account page, session snapshot). */
+  async followedTopics(userId: string) {
+    const rows = await this.db.topicFollow.findMany({
+      where: { userId },
+      orderBy: { createdAt: 'desc' },
+      include: {
+        topic: {
+          select: {
+            id: true,
+            name: true,
+            slug: true,
+            kind: true,
+            contentCount: true,
+            followerCount: true,
+          },
+        },
+      },
+    });
+    return rows.map((row) => row.topic);
+  }
+
   async getQuestion(slug: string) {
     const item = await this.db.question.findFirst({
       where: {

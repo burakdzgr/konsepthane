@@ -18,12 +18,15 @@ export type SessionSnapshot = {
   saved: string[];
   interaction: InteractionState | null;
   collections: MemberCollection[];
+  /** Slugs of the topic hubs the member follows. */
+  followedTopics?: string[];
 };
 
 type SessionContextValue = {
   status: 'loading' | 'ready';
   member: MemberSummary | null;
   saved: Set<string>;
+  followedTopics: Set<string>;
   /** Re-fetches the snapshot (called after a mutation completes). */
   refresh: () => Promise<void>;
   /** Fetches interaction state + boards for one content item; cached per key. */
@@ -40,7 +43,13 @@ async function fetchSnapshot(content?: string): Promise<SessionSnapshot> {
   return (await response.json()) as SessionSnapshot;
 }
 
-const empty: SessionSnapshot = { member: null, saved: [], interaction: null, collections: [] };
+const empty: SessionSnapshot = {
+  member: null,
+  saved: [],
+  interaction: null,
+  collections: [],
+  followedTopics: [],
+};
 
 export function SessionProvider({ children }: { children: ReactNode }) {
   const [snapshot, setSnapshot] = useState<SessionSnapshot>(empty);
@@ -85,6 +94,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     () => ({
       status,
       member: snapshot.member,
+      followedTopics: new Set(snapshot.followedTopics ?? []),
       saved: new Set(snapshot.saved),
       refresh,
       loadContent,
