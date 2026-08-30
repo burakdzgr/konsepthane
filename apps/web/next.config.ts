@@ -17,7 +17,8 @@ function remotePattern(url: string) {
 const config: NextConfig = {
   transpilePackages: ['@ilham/ui', '@ilham/seo', '@ilham/shared-types', '@ilham/validation'],
   poweredByHeader: false,
-  experimental: { optimizePackageImports: ['@ilham/ui'] },
+  // `globalNotFound`: branded 404 (app/global-not-found.tsx) for URLs outside the [locale] tree.
+  experimental: { optimizePackageImports: ['@ilham/ui'], globalNotFound: true },
   images: {
     // Uploaded media lives in the S3/MinIO bucket; `WEB_URL` covers absolute self-links.
     remotePatterns: [remotePattern(mediaUrl), remotePattern(webUrl)],
