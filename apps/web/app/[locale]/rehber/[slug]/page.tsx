@@ -8,20 +8,7 @@ import { DetailShell } from '@/components/community-layout';
 import { EditorialSources, officialEditorialSourceUrls } from '@/components/editorial-sources';
 import { getGuide } from '@/lib/community';
 import { authorHref, isEditorAuthor, readingMinutes } from '@/lib/editors';
-import { getFeed } from '@/lib/community';
 import { asLocale, localeMetadata, localePath } from '@/lib/i18n';
-
-/** Rendered statically and refreshed in the background; personal state comes from client islands. */
-export const revalidate = 300;
-export const dynamicParams = true;
-
-/** Prebuilds the indexable slugs at deploy time; new ones render on first request. */
-export async function generateStaticParams() {
-  const feed = await getFeed('new', 50);
-  return feed
-    .filter((item) => item.type === 'GUIDE')
-    .map((item) => ({ locale: 'tr', slug: item.slug }));
-}
 
 export async function generateMetadata({
   params,
@@ -51,7 +38,7 @@ export default async function GuideDetailPage({
   const item = await getGuide(slug);
   if (!item) notFound();
   const path = p(`/rehber/${item.slug}`);
-    const structuredData = [
+  const structuredData = [
     breadcrumbJsonLd([
       { name: locale === 'tr' ? 'Ana sayfa' : 'Home', url: absoluteUrl(p('/')) },
       { name: locale === 'tr' ? 'Rehberler' : 'Guides', url: absoluteUrl(p('/fikirler')) },

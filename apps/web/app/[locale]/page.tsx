@@ -18,9 +18,6 @@ import { topicHref } from '@/lib/topics';
 import { asLocale, getDictionary, localeMetadata, localePath } from '@/lib/i18n';
 import { siteIdentity } from '@/lib/site';
 
-/** Rendered statically and refreshed in the background; personal state comes from client islands. */
-export const revalidate = 300;
-
 const categoryVisuals = [
   ['firstBirthday', '1 yaş', '/placeholders/teddy-concept.svg'],
   ['girl', 'kız çocuk', '/placeholders/butterfly-concept.svg'],

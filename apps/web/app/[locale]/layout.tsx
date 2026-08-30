@@ -10,14 +10,7 @@ import { DropdownDismiss } from '@/components/dropdown-dismiss';
 import { NavigationMotion } from '@/components/navigation-motion';
 import { SessionProvider } from '@/components/session/session-provider';
 import { MobileNav, SiteHeader } from '@/components/site-header';
-import {
-  getDictionary,
-  htmlLang,
-  indexableLocales,
-  isLocale,
-  localePath,
-  locales,
-} from '@/lib/i18n';
+import { getDictionary, htmlLang, indexableLocales, isLocale, localePath } from '@/lib/i18n';
 import '../globals.css';
 
 const poppins = Poppins({
@@ -27,10 +20,6 @@ const poppins = Poppins({
   variable: '--font-poppins',
   display: 'swap',
 });
-
-export function generateStaticParams() {
-  return locales.map((locale) => ({ locale }));
-}
 
 /**
  * Root layout lives under `[locale]` so `<html lang>` comes from the route param instead of a
@@ -47,6 +36,13 @@ export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
 };
+
+/**
+ * Every page renders per request: the strict CSP needs a fresh nonce on each response (read via
+ * `headers()` below), which is incompatible with prerendered HTML. Data still benefits from the
+ * fetch cache (`next: { revalidate }`) in lib/*, so the API is not hit on every request.
+ */
+export const dynamic = 'force-dynamic';
 
 export async function generateMetadata({
   params,

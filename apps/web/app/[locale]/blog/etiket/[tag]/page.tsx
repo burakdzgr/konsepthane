@@ -8,8 +8,6 @@ import { BLOG_PAGE_SIZE, getBlogPosts, getBlogTags } from '@/lib/blog';
 import { asLocale, getDictionary, localeMetadata, localePath } from '@/lib/i18n';
 import { pageHref, pageMeta, parsePage } from '@/lib/pagination';
 
-export const revalidate = 300;
-
 /** Tag hubs are navigation aids, not landing pages: crawlable, never indexed. */
 export async function generateMetadata({
   params,

@@ -17,7 +17,7 @@ import {
 } from '@/components/engagement';
 import { acceptAnswerAction } from '@/lib/actions';
 import { MemberSessionError, hasMemberSession, loginHref, memberApi } from '@/lib/auth';
-import { getQuestion, getQuestions } from '@/lib/community';
+import { getQuestion } from '@/lib/community';
 import { formText } from '@/lib/form';
 import { authorHref } from '@/lib/editors';
 import { asLocale, getDictionary, getLocale, localeMetadata, localePath } from '@/lib/i18n';
@@ -66,17 +66,6 @@ export async function generateMetadata({
       })
     : {};
 }
-export const revalidate = 300;
-export const dynamicParams = true;
-
-/** Prebuilds the indexable slugs at deploy time; new ones render on first request. */
-export async function generateStaticParams() {
-  const items = await getQuestions({ tab: 'new', pageSize: 50 });
-  return items
-    .filter((item) => item.indexability === 'INDEX')
-    .map((item) => ({ locale: 'tr', slug: item.slug }));
-}
-
 export default async function QuestionDetailPage({
   params,
 }: {

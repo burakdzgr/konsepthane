@@ -8,9 +8,6 @@ import { getTopics } from '@/lib/community';
 import { asLocale, getDictionary, localeMetadata, localePath } from '@/lib/i18n';
 import { topicIndexDecision } from '@/lib/hub-index';
 
-/** Topic index: the hub above every `/konu/<slug>` page. Static, refreshed every 5 minutes. */
-export const revalidate = 300;
-
 const kindOrder: Array<CommunityTopic['kind']> = [
   'EVENT_TYPE',
   'AGE',

@@ -6,26 +6,10 @@ import { absoluteUrl, breadcrumbJsonLd, itemListJsonLd, shouldIndexHub } from '@
 import { ConceptGrid } from '@/components/concept-discovery';
 import { PageHeader } from '@/components/community-layout';
 import { SmartImage, cardSizes } from '@/components/smart-image';
-import { findLandingPage, landingPages } from '@/content/landing-pages';
+import { findLandingPage } from '@/content/landing-pages';
 import { getCategory, getConcepts } from '@/lib/api';
 import { getTopic } from '@/lib/community';
 import { asLocale, getDictionary, localeMetadata, localePath, type Locale } from '@/lib/i18n';
-
-/**
- * Curated landing page for a category × topic pair from the registry (`content/landing-pages.ts`).
- * Unregistered pairs 404 — filters never turn into landing pages on their own.
- */
-export const revalidate = 300;
-
-export function generateStaticParams() {
-  return landingPages.flatMap((entry) =>
-    (Object.keys(entry.locales) as Locale[]).map((locale) => ({
-      locale,
-      slug: entry.category,
-      topic: entry.topic,
-    })),
-  );
-}
 
 async function loadLanding(locale: Locale, categorySlug: string, topicSlug: string) {
   const entry = findLandingPage(categorySlug, topicSlug);

@@ -63,29 +63,29 @@ export default async function DiscussionsPage({
         }
       />
       <div className="wrap reading space-y-4 py-8">
-        {items.length
-          ? items.map((item) => (
-              <DiscussionCard
-                LinkComponent={Link}
-                ImageComponent={SmartImage}
-                key={item.id}
-                title={item.title}
-                summary={item.body}
-                href={p(`/tartisma/${item.slug}`)}
-                authorName={item.author.profile?.displayName}
-                username={item.author.profile?.username}
-                reactions={item.reactionCount}
-                responses={item.commentCount}
-                saves={item.saveCount}
-                meta={item.locked ? 'Kilitli' : 'Tartışmaya açık'}
-              />
-            ))
-          : (
-              <EmptyState
-                title="Henüz tartışma yok"
-                description="İlk tartışmayı sen başlat; topluluk görüşleri burada toplanır."
-              />
-            )}
+        {items.length ? (
+          items.map((item) => (
+            <DiscussionCard
+              LinkComponent={Link}
+              ImageComponent={SmartImage}
+              key={item.id}
+              title={item.title}
+              summary={item.body}
+              href={p(`/tartisma/${item.slug}`)}
+              authorName={item.author.profile?.displayName}
+              username={item.author.profile?.username}
+              reactions={item.reactionCount}
+              responses={item.commentCount}
+              saves={item.saveCount}
+              meta={item.locked ? 'Kilitli' : 'Tartışmaya açık'}
+            />
+          ))
+        ) : (
+          <EmptyState
+            title="Henüz tartışma yok"
+            description="İlk tartışmayı sen başlat; topluluk görüşleri burada toplanır."
+          />
+        )}
         <Pagination
           page={meta.page}
           pageCount={meta.pageCount}

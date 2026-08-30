@@ -6,21 +6,8 @@ import { absoluteUrl, breadcrumbJsonLd, itemListJsonLd } from '@ilham/seo';
 import { PageHeader } from '@/components/community-layout';
 import { landingPagesForTopic } from '@/content/landing-pages';
 import { getTopic } from '@/lib/community';
-import { getTopics } from '@/lib/community';
 import { topicIndexDecision } from '@/lib/hub-index';
 import { asLocale, getDictionary, localeMetadata, localePath } from '@/lib/i18n';
-
-/** Rendered statically and refreshed in the background; personal state comes from client islands. */
-export const revalidate = 300;
-export const dynamicParams = true;
-
-/** Prebuilds the indexable slugs at deploy time; new ones render on first request. */
-export async function generateStaticParams() {
-  const topics = await getTopics(50);
-  return topics
-    .filter((topic) => topic.contentCount >= 3)
-    .map((topic) => ({ locale: 'tr', slug: topic.slug }));
-}
 
 export async function generateMetadata({
   params,

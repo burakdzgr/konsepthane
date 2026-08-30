@@ -32,15 +32,6 @@ import { uploadExperiencePhotos } from '@/lib/media';
 import { asLocale, getDictionary, getLocale, localeMetadata, localePath } from '@/lib/i18n';
 import { applySeoOverride, redirectIfLegacyPath } from '@/lib/seo';
 
-/** Rendered statically (top concepts prebuilt, the rest on first request) and refreshed every 5 minutes. */
-export const revalidate = 300;
-export const dynamicParams = true;
-
-export async function generateStaticParams() {
-  const concepts = await getConcepts({ sort: 'popular', pageSize: 100 });
-  return concepts.map((concept) => ({ locale: 'tr', slug: concept.slug }));
-}
-
 export async function generateMetadata({
   params,
 }: {

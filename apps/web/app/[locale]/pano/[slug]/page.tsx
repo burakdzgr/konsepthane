@@ -54,11 +54,7 @@ export default async function BoardPage({
   const visibility = (board.visibility ?? 'PRIVATE') as keyof typeof t.visibility;
   return (
     <>
-      <PageHeader
-        eyebrow={t.boardsEyebrow}
-        title={board.title}
-        description={t.boardOwnerHint}
-      />
+      <PageHeader eyebrow={t.boardsEyebrow} title={board.title} description={t.boardOwnerHint} />
       <div className="wrap py-8">
         <Breadcrumb
           label={dictionary.pages.breadcrumbLabel}

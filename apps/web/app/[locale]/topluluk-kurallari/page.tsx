@@ -3,9 +3,6 @@ import { Card } from '@ilham/ui';
 import { PageHeader } from '@/components/community-layout';
 import { asLocale, localeMetadata } from '@/lib/i18n';
 
-/** Rendered statically and refreshed in the background; personal state comes from client islands. */
-export const revalidate = 300;
-
 export async function generateMetadata({
   params,
 }: {

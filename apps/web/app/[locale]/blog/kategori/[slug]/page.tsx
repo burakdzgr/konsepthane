@@ -9,8 +9,6 @@ import { BLOG_PAGE_SIZE, getBlogCategories, getBlogPosts } from '@/lib/blog';
 import { asLocale, getDictionary, localePath } from '@/lib/i18n';
 import { pageHref, pageMeta, pagedMetadata, parsePage } from '@/lib/pagination';
 
-export const revalidate = 300;
-
 export async function generateMetadata({
   params,
   searchParams,

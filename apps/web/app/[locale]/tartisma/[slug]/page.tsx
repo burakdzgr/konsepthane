@@ -13,21 +13,8 @@ import {
 import { absoluteUrl, breadcrumbJsonLd, discussionForumJsonLd } from '@ilham/seo';
 import { DetailShell } from '@/components/community-layout';
 import { getDiscussion } from '@/lib/community';
-import { getDiscussions } from '@/lib/community';
 import { authorHref } from '@/lib/editors';
 import { asLocale, getDictionary, localeMetadata, localePath } from '@/lib/i18n';
-
-/** Rendered statically and refreshed in the background; personal state comes from client islands. */
-export const revalidate = 300;
-export const dynamicParams = true;
-
-/** Prebuilds the indexable slugs at deploy time; new ones render on first request. */
-export async function generateStaticParams() {
-  const items = await getDiscussions(50);
-  return items
-    .filter((item) => item.indexability === 'INDEX')
-    .map((item) => ({ locale: 'tr', slug: item.slug }));
-}
 
 export async function generateMetadata({
   params,

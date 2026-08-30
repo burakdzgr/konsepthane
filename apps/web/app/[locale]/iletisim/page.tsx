@@ -3,9 +3,6 @@ import { TrustPage } from '@/components/trust-page';
 import { trustPages } from '@/content/trust';
 import { asLocale, getDictionary, localeMetadata } from '@/lib/i18n';
 
-/** Rendered statically and refreshed in the background; personal state comes from client islands. */
-export const revalidate = 300;
-
 const SLUG = 'iletisim' as const;
 const PATH = `/${SLUG}`;
 

@@ -9,7 +9,6 @@ import { SmartImage, gallerySizes } from '@/components/smart-image';
 import { MemberSessionError, hasMemberSession, loginHref, memberApi } from '@/lib/auth';
 import { getExperience } from '@/lib/community';
 import { authorHref } from '@/lib/editors';
-import { getExperiences } from '@/lib/community';
 import { formText } from '@/lib/form';
 import { asLocale, getDictionary, getLocale, localeMetadata, localePath } from '@/lib/i18n';
 
@@ -60,17 +59,6 @@ async function comment(experienceId: string, slug: string, formData: FormData) {
   revalidatePath(path);
   if (failure) redirect(`${path}?hata=${encodeURIComponent(failure)}#yorumlar`);
   redirect(`${path}#yorumlar`);
-}
-
-export const revalidate = 300;
-export const dynamicParams = true;
-
-/** Prebuilds the indexable slugs at deploy time; new ones render on first request. */
-export async function generateStaticParams() {
-  const items = await getExperiences({ pageSize: 50 });
-  return items
-    .filter((item) => item.indexability === 'INDEX')
-    .map((item) => ({ locale: 'tr', slug: item.slug }));
 }
 
 export default async function ExperienceDetailPage({

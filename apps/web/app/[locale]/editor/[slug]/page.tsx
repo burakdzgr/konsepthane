@@ -4,22 +4,8 @@ import { notFound } from 'next/navigation';
 import { Avatar, Breadcrumb, ConceptCard, Icon } from '@ilham/ui';
 import { absoluteUrl, breadcrumbJsonLd, profilePageJsonLd } from '@ilham/seo';
 import { SmartImage, cardSizes } from '@/components/smart-image';
-import { getEditor, getEditors } from '@/lib/editors';
+import { getEditor } from '@/lib/editors';
 import { asLocale, getDictionary, localeMetadata, localePath } from '@/lib/i18n';
-
-/**
- * Public editor profile. Only active, public editors resolve (the API 404s otherwise), so the
- * page is `index,follow`, self-canonical and in the `editorler` sitemap shard. Member profiles
- * live at `/uye/<username>` and stay noindex.
- */
-export const revalidate = 300;
-
-export async function generateStaticParams() {
-  const editors = await getEditors();
-  return editors.flatMap((editor) =>
-    editor.username ? [{ locale: 'tr', slug: editor.username }] : [],
-  );
-}
 
 export async function generateMetadata({
   params,
@@ -84,7 +70,11 @@ export default async function EditorPage({
   ];
   const dateLocale = locale === 'tr' ? 'tr-TR' : 'en-GB';
   const format = (value: string) =>
-    new Date(value).toLocaleDateString(dateLocale, { day: 'numeric', month: 'long', year: 'numeric' });
+    new Date(value).toLocaleDateString(dateLocale, {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+    });
   return (
     <>
       <script
@@ -107,7 +97,9 @@ export default async function EditorPage({
               <p className="section-eyebrow">{t.eyebrow}</p>
               <h1 className="mt-2">{editor.displayName}</h1>
               <p className="editor-hero-role">{editor.jobTitle ?? t.defaultJobTitle}</p>
-              {editor.bio ? <p className="mt-4 max-w-2xl leading-7 text-[var(--ink-2)]">{editor.bio}</p> : null}
+              {editor.bio ? (
+                <p className="mt-4 max-w-2xl leading-7 text-[var(--ink-2)]">{editor.bio}</p>
+              ) : null}
               <dl className="editor-facts">
                 {editor.expertise.length ? (
                   <div>
@@ -191,7 +183,10 @@ export default async function EditorPage({
             <ul className="mt-5 grid gap-3">
               {editor.guides.map((guide) => (
                 <li key={guide.id} className="surface p-4">
-                  <Link href={p(`/rehber/${guide.slug}`)} className="font-semibold hover:text-[var(--accent-strong)]">
+                  <Link
+                    href={p(`/rehber/${guide.slug}`)}
+                    className="font-semibold hover:text-[var(--accent-strong)]"
+                  >
                     {guide.title}
                   </Link>
                   <p className="mt-1 text-sm text-[var(--muted)]">{guide.summary}</p>

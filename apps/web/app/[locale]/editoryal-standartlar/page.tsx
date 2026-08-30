@@ -3,9 +3,6 @@ import Link from 'next/link';
 import { absoluteUrl, breadcrumbJsonLd } from '@ilham/seo';
 import { asLocale, localeMetadata, localePath } from '@/lib/i18n';
 
-/** Rendered statically and refreshed in the background; personal state comes from client islands. */
-export const revalidate = 300;
-
 export async function generateMetadata({
   params,
 }: {

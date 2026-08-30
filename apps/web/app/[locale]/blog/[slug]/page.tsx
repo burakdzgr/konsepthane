@@ -11,15 +11,6 @@ import { asLocale, getDictionary, localeMetadata, localePath } from '@/lib/i18n'
 import { renderMarkdown } from '@/lib/markdown';
 import { displayMediaSrc } from '@/lib/media-url';
 
-/** Rendered statically and refreshed in the background (ISR); the view counter lives in the API. */
-export const revalidate = 300;
-export const dynamicParams = true;
-
-export async function generateStaticParams() {
-  const posts = await getLatestBlogPosts(50);
-  return posts.map((post) => ({ locale: 'tr', slug: post.slug }));
-}
-
 export async function generateMetadata({
   params,
 }: {
