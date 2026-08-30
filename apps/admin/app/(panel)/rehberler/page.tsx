@@ -1,5 +1,6 @@
 import { Badge, Input, Select, TextArea, TextInput } from '@ilham/ui';
 import { toTurkishSlug } from '@ilham/validation';
+import { RichTextField } from '@/components/rich-text-field';
 import { Flash } from '@/components/flash';
 import { runAdminAction, type FlashParams } from '@/lib/actions';
 import { adminApi } from '@/lib/api';
@@ -144,14 +145,13 @@ function GuideForm({ guide, editors }: { guide?: AdminGuide; editors: EditorOpti
         />
       </div>
       <div className="lg:col-span-2">
-        <TextArea
+        <RichTextField
           label="İçerik"
           name="body"
           defaultValue={guide?.body}
           required
           minLength={20}
-          rows={14}
-          hint="Paragraflar boş satırla ayrılır."
+          maxLength={60000}
         />
       </div>
       <label className="flex items-center gap-2">

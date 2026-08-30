@@ -3,6 +3,7 @@ import { Badge, Input, Select, TextArea, TextInput } from '@ilham/ui';
 import { toTurkishSlug } from '@ilham/validation';
 import { Flash } from '@/components/flash';
 import { ImageUploadField } from '@/components/image-upload';
+import { RichTextField } from '@/components/rich-text-field';
 import { runAdminAction, type FlashParams } from '@/lib/actions';
 import { adminApi } from '@/lib/api';
 import { formString } from '@/lib/form';
@@ -223,14 +224,13 @@ function PostForm({
         />
       </div>
       <div className="lg:col-span-2">
-        <TextArea
-          label="İçerik (Markdown)"
+        <RichTextField
+          label="İçerik"
           name="body"
           defaultValue={post?.body}
           required
           minLength={20}
-          rows={18}
-          hint="## Başlık, ### Alt başlık, **kalın**, *italik*, - madde, 1. sıralı madde, > alıntı, [metin](https://…), ![alt](görsel-url), --- çizgi. Paragraflar boş satırla ayrılır."
+          maxLength={120000}
         />
       </div>
       <div className="lg:col-span-2 grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">

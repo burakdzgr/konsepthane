@@ -1,16 +1,18 @@
 'use client';
 
 import { useId, useRef, useState, type DragEvent } from 'react';
+import { safeContentUrl } from '@ilham/content';
 
 const ACCEPT = 'image/jpeg,image/png,image/webp,image/avif';
 const MAX_BYTES = 15_000_000;
 
 type Uploaded = { url: string; key: string };
 
-async function uploadFile(file: File): Promise<Uploaded> {
+export async function uploadFile(file: File): Promise<Uploaded> {
   if (!ACCEPT.split(',').includes(file.type))
     throw new Error('Yalnızca JPEG, PNG, WebP veya AVIF görsel yüklenebilir.');
   if (file.size > MAX_BYTES) throw new Error('Görsel en fazla 15 MB olabilir.');
+  if (!file.size) throw new Error('Boş dosya yüklenemez.');
   const body = new FormData();
   body.append('file', file, file.name);
   const response = await fetch('/admin/api/upload', { method: 'POST', body });
@@ -18,6 +20,8 @@ async function uploadFile(file: File): Promise<Uploaded> {
     message?: string;
   };
   if (!response.ok || !payload.url) throw new Error(payload.message ?? 'Yükleme başarısız.');
+  if (!safeContentUrl(payload.url, true))
+    throw new Error('Sunucu geçersiz bir görsel adresi döndürdü.');
   return { url: payload.url, key: payload.key ?? '' };
 }
 
@@ -99,9 +103,7 @@ export function ImageUploadField({
         onDragLeave={zone.onDragLeave}
         onDrop={zone.onDrop}
       >
-        {value ? (
-          <img src={value} alt="" />
-        ) : null}
+        {value ? <img src={value} alt="" /> : null}
         <div className="image-dropzone-overlay">
           {busy ? (
             <span>Yükleniyor…</span>

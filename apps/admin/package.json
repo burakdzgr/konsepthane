@@ -11,6 +11,14 @@
     "test": "vitest run --passWithNoTests"
   },
   "dependencies": {
+    "@ilham/content": "workspace:*",
+    "@tiptap/core": "3.30.5",
+    "@tiptap/react": "3.30.5",
+    "@tiptap/pm": "3.30.5",
+    "@tiptap/starter-kit": "3.30.5",
+    "@tiptap/extension-image": "3.30.5",
+    "@tiptap/extension-table": "3.30.5",
+    "@tiptap/markdown": "3.30.5",
     "@ilham/shared-types": "workspace:*",
     "@ilham/ui": "workspace:*",
     "@ilham/validation": "workspace:*",
@@ -19,6 +27,7 @@
     "react-dom": "19.2.8"
   },
   "devDependencies": {
+    "jsdom": "30.0.1",
     "@tailwindcss/postcss": "4.3.3",
     "@types/node": "22.18.3",
     "@types/react": "19.2.2",

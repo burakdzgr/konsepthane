@@ -1,7 +1,7 @@
 import type { NextConfig } from 'next';
 const config: NextConfig = {
   basePath: '/admin',
-  transpilePackages: ['@ilham/ui', '@ilham/shared-types', '@ilham/validation'],
+  transpilePackages: ['@ilham/content', '@ilham/ui', '@ilham/shared-types', '@ilham/validation'],
   poweredByHeader: false,
   headers() {
     return [

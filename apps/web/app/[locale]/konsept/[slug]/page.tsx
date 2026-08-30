@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { EditorialBody } from '@/components/editorial-body';
 import { revalidatePath } from 'next/cache';
 import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
@@ -307,11 +308,13 @@ export default async function ConceptPage({
       </div>
 
       <section className="wrap reading py-10">
-        <p className="editorial-lead">{concept.introduction ?? concept.description}</p>
+        <EditorialBody
+          source={concept.introduction ?? concept.description}
+          prefix="giris-"
+          className="editorial-lead"
+        />
         {concept.introduction && (
-          <p className="mt-6 whitespace-pre-line text-lg leading-9 text-[var(--muted)]">
-            {concept.description}
-          </p>
+          <EditorialBody source={concept.description} prefix="anlatim-" className="mt-6" />
         )}
         {palette.length > 0 && (
           <div className="mt-12">
@@ -328,12 +331,10 @@ export default async function ConceptPage({
           </div>
         )}
         <div className="mt-12 space-y-12">
-          {sections.map(([title, content]) => (
+          {sections.map(([title, content], index) => (
             <section key={title}>
               <h2 className="font-serif text-3xl">{title}</h2>
-              <p className="mt-4 whitespace-pre-line text-lg leading-9 text-[var(--muted)]">
-                {content}
-              </p>
+              <EditorialBody source={content} prefix={`bolum-${index}-`} className="mt-4" />
             </section>
           ))}
         </div>

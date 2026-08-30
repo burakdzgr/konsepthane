@@ -15,7 +15,13 @@ function remotePattern(url: string) {
 }
 
 const config: NextConfig = {
-  transpilePackages: ['@ilham/ui', '@ilham/seo', '@ilham/shared-types', '@ilham/validation'],
+  transpilePackages: [
+    '@ilham/content',
+    '@ilham/ui',
+    '@ilham/seo',
+    '@ilham/shared-types',
+    '@ilham/validation',
+  ],
   poweredByHeader: false,
   // Dev only: lets the dev server be reached as konsepthane.net (Cookiebot serves the dialog only
   // for the registered domain), e.g. via a browser-level host mapping. Ignored by `next start`.

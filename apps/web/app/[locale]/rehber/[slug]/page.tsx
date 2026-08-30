@@ -7,6 +7,8 @@ import { AuthorBox, EditorialByline } from '@/components/author-byline';
 import { DetailShell } from '@/components/community-layout';
 import { EditorialSources, officialEditorialSourceUrls } from '@/components/editorial-sources';
 import { getGuide } from '@/lib/community';
+import { EditorialBody } from '@/components/editorial-body';
+import { renderMarkdown } from '@ilham/content';
 import { authorHref, isEditorAuthor, readingMinutes } from '@/lib/editors';
 import { asLocale, localeMetadata, localePath } from '@/lib/i18n';
 
@@ -18,11 +20,17 @@ export async function generateMetadata({
   const { locale: localeParam, slug } = await params;
   const locale = asLocale(localeParam);
   const item = await getGuide(slug);
+  const image = item ? renderMarkdown(item.body).images[0] : undefined;
   return item
     ? localeMetadata(locale, `/rehber/${item.slug}`, {
         title: item.title,
         description: item.summary,
-        openGraph: { title: item.title, description: item.summary, type: 'article' },
+        openGraph: {
+          title: item.title,
+          description: item.summary,
+          type: 'article',
+          ...(image ? { images: [{ url: absoluteUrl(image.url), alt: image.alt }] } : {}),
+        },
       })
     : {};
 }
@@ -59,9 +67,7 @@ export default async function GuideDetailPage({
           }
         : { type: 'Organization' },
       publisherUrl: absoluteUrl(p('/')),
-      // Article.image must depict the content itself (hero → content-specific OG image → a real
-      // in-content image). Guides carry no images yet, so the property is omitted rather than
-      // filled with the generic brand card; `image` is recommended, not required, for Article.
+      images: renderMarkdown(item.body).images.map((image) => absoluteUrl(image.url)),
       section: locale === 'tr' ? 'Planlama rehberi' : 'Planning guide',
       language: locale,
       citations: officialEditorialSourceUrls,
@@ -97,7 +103,7 @@ export default async function GuideDetailPage({
           <h1 className="mt-7 font-serif text-4xl leading-tight">{item.title}</h1>
           <p className="editorial-lead mt-4">{item.summary}</p>
           <div className="my-7 h-px bg-[var(--line)]" />
-          <div className="whitespace-pre-line text-[16px] leading-8">{item.body}</div>
+          <EditorialBody source={item.body} />
           <EditorialSources locale={locale} />
           <CommunityActionBar
             reactions={item.reactionCount}

@@ -11,6 +11,7 @@
     "test": "vitest run --passWithNoTests"
   },
   "dependencies": {
+    "@ilham/content": "workspace:*",
     "@ilham/seo": "workspace:*",
     "@ilham/shared-types": "workspace:*",
     "@ilham/ui": "workspace:*",

@@ -3,6 +3,7 @@ import { toTurkishSlug } from '@ilham/validation';
 import type { CategorySummary, ConceptDetail, Paginated } from '@ilham/shared-types';
 import { Flash } from '@/components/flash';
 import { GalleryUploadField, ImageUploadField } from '@/components/image-upload';
+import { RichTextField } from '@/components/rich-text-field';
 import { runAdminAction, type FlashParams } from '@/lib/actions';
 import { adminApi } from '@/lib/api';
 import { formString } from '@/lib/form';
@@ -223,14 +224,13 @@ function ConceptForm({
         />
       </div>
       <div className="lg:col-span-2">
-        <TextArea
+        <RichTextField
           label="Konsept anlatımı"
           name="description"
           defaultValue={concept?.description}
           required
           minLength={20}
           maxLength={30000}
-          rows={6}
         />
       </div>
       <ImageUploadField
@@ -259,10 +259,14 @@ function ConceptForm({
         <summary className="cursor-pointer font-semibold">Editoryal bölümler</summary>
         <div className="mt-4 grid gap-4">
           {editorialFields.map(([field, label, hint]) => (
-            <label key={field}>
-              {label} <span className="font-normal text-[var(--muted)]">— {hint}</span>
-              <textarea name={field} defaultValue={(concept?.[field] as string | null) ?? ''} />
-            </label>
+            <RichTextField
+              key={field}
+              name={field}
+              label={label}
+              hint={hint}
+              defaultValue={(concept?.[field] as string | null) ?? ''}
+              maxLength={field === 'introduction' ? 5000 : 20000}
+            />
           ))}
           <label>
             Renk paleti{' '}

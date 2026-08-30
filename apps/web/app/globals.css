@@ -3069,10 +3069,34 @@ textarea {
   color: var(--accent-strong);
 }
 .blog-prose {
+  min-width: 0;
+  overflow-wrap: anywhere;
   max-width: 720px;
   font-size: 1.05rem;
   line-height: 1.85;
   color: var(--ink);
+}
+.blog-prose table {
+  display: block;
+  max-width: 100%;
+  overflow-x: auto;
+  border-collapse: collapse;
+  margin-block: 1.5rem;
+}
+.blog-prose th,
+.blog-prose td {
+  border: 1px solid var(--line);
+  padding: 0.65rem 0.8rem;
+  text-align: left;
+  vertical-align: top;
+  min-width: 100px;
+}
+.blog-prose th {
+  font-weight: 700;
+  background: var(--paper-2);
+}
+.blog-prose li > p {
+  margin: 0;
 }
 .blog-prose > * + * {
   margin-top: 1.1em;
