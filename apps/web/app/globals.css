@@ -3293,17 +3293,7 @@ textarea {
   color: #fff;
 }
 
-/* CTA band: the two actions share the row with equal width */
-.cta-actions {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.6rem;
-}
-.cta-actions .btn {
-  width: 100%;
-  padding-inline: 0.8rem;
-  text-align: center;
-}
+/* CTA band: on wide screens the pair sits at the end of the band */
 @media (min-width: 900px) {
   .cta-actions {
     width: min(100%, 420px);
@@ -3311,11 +3301,68 @@ textarea {
   }
 }
 
-/* Hero form never wider than its column */
-.hero-search,
+/* Hero: the grid track can never grow past the viewport (minmax(0, …) + min-width: 0 on the
+   items), the decorative blobs are clipped, and the form/chips fill exactly the column. */
+.editorial-hero {
+  overflow-x: clip;
+}
+.editorial-hero > .wrap {
+  grid-template-columns: minmax(0, 1fr);
+}
+@media (min-width: 1024px) {
+  .editorial-hero > .wrap {
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+  }
+}
+.editorial-hero > .wrap > * {
+  min-width: 0;
+  max-width: 100%;
+}
+.hero-search {
+  width: 100%;
+  max-width: 36rem;
+  min-width: 0;
+}
 .topic-chips {
   max-width: 100%;
   min-width: 0;
+}
+.editorial-hero .section-eyebrow {
+  flex-wrap: wrap;
+  white-space: normal;
+}
+
+/* Button pairs that must sit side by side at equal width on phones (CTA band, experiences) */
+.action-pair,
+.cta-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.6rem;
+  width: 100%;
+}
+.action-pair .btn,
+.cta-actions .btn {
+  width: 100%;
+  min-height: 44px;
+  height: auto;
+  padding: 0.5rem 0.6rem;
+  font-size: 0.85rem;
+  line-height: 1.2;
+  text-align: center;
+  white-space: normal;
+}
+@media (min-width: 640px) {
+  .action-pair {
+    display: flex;
+    flex-wrap: wrap;
+    width: auto;
+  }
+  .action-pair .btn {
+    width: auto;
+    padding: 0.6rem 1.2rem;
+    font-size: 0.875rem;
+    white-space: nowrap;
+  }
 }
 .empty-state {
   width: 100%;

@@ -287,7 +287,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
                 {t.home.experiencesSubtitle}
               </p>
             </div>
-            <div className="flex flex-wrap items-center gap-2">
+            <div className="action-pair">
               <Link href={p('/deneyimler')} className="btn btn-ghost">
                 {t.home.allExperiences}
               </Link>
