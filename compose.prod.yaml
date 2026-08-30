@@ -44,6 +44,8 @@ x-prod-env: &prod-env
 services:
   api:
     build: { context: ., dockerfile: infra/docker/Dockerfile, args: { APP: api, <<: *build-args } }
+    # The base file runs dev servers; production must run the compiled apps.
+    command: pnpm --filter @ilham/api start
     environment: *prod-env
     ports: !override ['127.0.0.1:${API_PORT:-4010}:4000']
     restart: always
@@ -53,18 +55,21 @@ services:
 
   worker:
     build: { context: ., dockerfile: infra/docker/Dockerfile, args: { APP: worker, <<: *build-args } }
+    command: pnpm --filter @ilham/worker start
     environment: *prod-env
     ports: !override ['127.0.0.1:${WORKER_PORT:-4011}:4001']
     restart: always
 
   web:
     build: { context: ., dockerfile: infra/docker/Dockerfile, args: { APP: web, <<: *build-args } }
+    command: pnpm --filter @ilham/web start
     environment: *prod-env
     ports: !override ['127.0.0.1:${WEB_PORT:-3210}:3000']
     restart: always
 
   admin:
     build: { context: ., dockerfile: infra/docker/Dockerfile, args: { APP: admin, <<: *build-args } }
+    command: pnpm --filter @ilham/admin start
     environment: *prod-env
     ports: !override ['127.0.0.1:${ADMIN_PORT:-3211}:3001']
     restart: always

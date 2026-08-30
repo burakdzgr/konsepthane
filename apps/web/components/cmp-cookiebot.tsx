@@ -79,6 +79,21 @@ export function CookiebotBridge({
       window.removeEventListener('CookiebotOnLoad', sync);
     };
   }, [cbid, gaId]);
+  useEffect(() => {
+    // Design QA: `?cookiebot=show` re-opens the dialog even when consent is already stored,
+    // so the themed CMP can be inspected repeatedly without clearing cookies.
+    if (!cbid || !new URLSearchParams(window.location.search).has('cookiebot')) return;
+    const reopen = () => {
+      const w = window as CmpWindow;
+      (w.Cookiebot?.renew ?? w.Cookiebot?.show)?.();
+    };
+    window.addEventListener('CookiebotOnLoad', reopen);
+    const timer = window.setTimeout(reopen, 1500);
+    return () => {
+      window.removeEventListener('CookiebotOnLoad', reopen);
+      window.clearTimeout(timer);
+    };
+  }, [cbid]);
   return null;
 }
 
