@@ -17,6 +17,7 @@ export type IconName =
   | 'users'
   | 'help'
   | 'chevron-down'
+  | 'chevron-left'
   | 'flag'
   | 'check'
   | 'sparkle'
@@ -48,6 +49,7 @@ const paths: Record<IconName, string> = {
     'M9 12a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Zm-6 8a6 6 0 0 1 12 0M16 11a3 3 0 1 0 0-6m5 15a5 5 0 0 0-4-4.9',
   help: 'M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18Zm-2.5 6.5a2.5 2.5 0 1 1 3.6 2.2c-.7.4-1.1.9-1.1 1.8M12 17h.01',
   'chevron-down': 'm6 9 6 6 6-6',
+  'chevron-left': 'm15 6-6 6 6 6',
   flag: 'M5 21V4h11l-1 4 1 4H5',
   check: 'm5 12 5 5L20 7',
   sparkle:

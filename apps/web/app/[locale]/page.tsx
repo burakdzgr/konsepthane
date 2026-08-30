@@ -2,9 +2,11 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { BlogCard } from '@/components/blog-card';
 import { getLatestBlogPosts } from '@/lib/blog';
-import { CollectionCard, ExperienceCard, Icon } from '@ilham/ui';
+import { CollectionCard, EmptyState, ExperienceCard, Icon } from '@ilham/ui';
 import { absoluteUrl, organizationJsonLd, websiteJsonLd } from '@ilham/seo';
 import { ConceptGrid } from '@/components/concept-discovery';
+import { DiscoveryTabs } from '@/components/home-discovery';
+import { ScrollRow } from '@/components/scroll-row';
 import { SmartImage, cardSizes, heroSizes } from '@/components/smart-image';
 import { getCategories, getConcepts } from '@/lib/api';
 import {
@@ -63,16 +65,28 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
       addressCountry: siteIdentity.country,
     }),
   ];
-  const [categories, concepts, experiences, questions, feed, collections, topics] =
-    await Promise.all([
-      getCategories(),
-      getConcepts({ sort: 'popular', pageSize: 12 }),
-      getExperiences({ pageSize: 8 }),
-      getQuestions({ tab: 'popular' }),
-      getFeed('new'),
-      getPublicCollections(),
-      getTopics(),
-    ]);
+  const [
+    categories,
+    concepts,
+    newConcepts,
+    savedConcepts,
+    experiences,
+    questions,
+    feed,
+    collections,
+    topics,
+  ] = await Promise.all([
+    getCategories(),
+    getConcepts({ sort: 'popular', pageSize: 12 }),
+    getConcepts({ sort: 'new', pageSize: 6 }),
+    getConcepts({ sort: 'saved', pageSize: 6 }),
+    getExperiences({ pageSize: 8 }),
+    getQuestions({ tab: 'popular' }),
+    getFeed('new'),
+    getPublicCollections(),
+    getTopics(),
+  ]);
+  const scrollLabels = { prev: t.home.scrollPrev, next: t.home.scrollNext };
   const guides = feed.filter((item) => item.type === 'GUIDE').slice(0, 3);
   const blogPosts = await getLatestBlogPosts(3);
   const birthdayCount = categories.find((category) => category.slug === 'dogum-gunu')?.conceptCount;
@@ -187,21 +201,23 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
             {t.home.birthdayIdeas(birthdayCount ?? 0)} <Icon name="arrow-right" size={16} />
           </Link>
         </div>
-        <div className="visual-category-grid mt-6">
-          {categoryVisuals.map(([key, query, image]) => (
-            <Link
-              key={key}
-              href={topicHref(locale, query, topics)}
-              className="visual-category-card"
-            >
-              <SmartImage src={image} alt="" sizes="(max-width: 640px) 40vw, 180px" />
-              <span>
-                {t.home.categories[key]}
-                <Icon name="arrow-right" size={16} />
-              </span>
-            </Link>
-          ))}
-        </div>
+        <ScrollRow className="mt-6" labels={scrollLabels} ariaLabel={t.home.categoriesTitle}>
+          <div className="visual-category-grid">
+            {categoryVisuals.map(([key, query, image]) => (
+              <Link
+                key={key}
+                href={topicHref(locale, query, topics)}
+                className="visual-category-card"
+              >
+                <SmartImage src={image} alt="" sizes="(max-width: 640px) 40vw, 180px" />
+                <span>
+                  {t.home.categories[key]}
+                  <Icon name="arrow-right" size={16} />
+                </span>
+              </Link>
+            ))}
+          </div>
+        </ScrollRow>
       </section>
 
       <section className="wrap py-10">
@@ -214,9 +230,15 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
             {t.home.allConcepts} <Icon name="arrow-right" size={16} />
           </Link>
         </div>
-        <div className="featured-concepts-grid mt-7">
-          <ConceptGrid concepts={editorsPicks} returnTo={p('/')} className="contents" />
-        </div>
+        {editorsPicks.length > 0 ? (
+          <div className="featured-concepts-grid mt-7">
+            <ConceptGrid concepts={editorsPicks} returnTo={p('/')} className="contents" />
+          </div>
+        ) : (
+          <div className="mt-7">
+            <EmptyState title={t.pages.ideas.empty} description={t.pages.ideas.emptyText} />
+          </div>
+        )}
       </section>
 
       <section className="wrap py-12">
@@ -225,20 +247,34 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
             <p className="section-eyebrow">{t.home.discoverEyebrow}</p>
             <h2>{t.home.discoverTitle}</h2>
           </div>
-          <div className="discovery-tabs" aria-label={t.home.sortLabel}>
-            <Link className="is-active" href={p('/fikirler')}>
-              {t.sort.popular}
-            </Link>
-            <Link href={p('/fikirler?sirala=new')}>{t.sort.new}</Link>
-            <Link href={p('/fikirler?sirala=saved')}>{t.sort.saved}</Link>
-          </div>
         </div>
-        <ConceptGrid concepts={concepts.slice(0, 8)} returnTo={p('/')} />
-        <div className="mt-2 text-center">
-          <Link href={p('/fikirler')} className="btn btn-ghost">
-            {t.home.moreConcepts} <Icon name="arrow-right" size={16} />
-          </Link>
-        </div>
+        <DiscoveryTabs
+          ariaLabel={t.home.sortLabel}
+          moreLabel={t.home.moreConcepts}
+          tabs={[
+            {
+              key: 'popular',
+              moreHref: p('/fikirler'),
+              label: t.sort.popular,
+              count: concepts.length,
+              panel: <ConceptGrid concepts={concepts.slice(0, 6)} returnTo={p('/')} />,
+            },
+            {
+              key: 'new',
+              moreHref: p('/fikirler?sirala=new'),
+              label: t.sort.new,
+              count: newConcepts.length,
+              panel: <ConceptGrid concepts={newConcepts.slice(0, 6)} returnTo={p('/')} />,
+            },
+            {
+              key: 'saved',
+              moreHref: p('/fikirler?sirala=saved'),
+              label: t.sort.saved,
+              count: savedConcepts.length,
+              panel: <ConceptGrid concepts={savedConcepts.slice(0, 6)} returnTo={p('/')} />,
+            },
+          ]}
+        />
       </section>
 
       <section className="experience-band mt-10">
@@ -392,23 +428,6 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
         </section>
       )}
 
-      {blogPosts.length > 0 && (
-        <section className="wrap py-12" aria-label={t.home.blogTitle}>
-          <div className="section-heading">
-            <div>
-              <p className="section-eyebrow">{t.home.blogEyebrow}</p>
-              <h2>{t.home.blogTitle}</h2>
-            </div>
-            <Link href={p('/blog')}>{t.home.blogAll} →</Link>
-          </div>
-          <div className="blog-grid mt-6">
-            {blogPosts.map((post) => (
-              <BlogCard key={post.id} post={post} locale={locale} />
-            ))}
-          </div>
-        </section>
-      )}
-
       <section className="wrap py-6">
         <div className="cta-band">
           <div>
@@ -418,7 +437,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
             <h2 className="mt-3">{t.home.ctaTitle}</h2>
             <p className="mt-3 max-w-xl leading-7">{t.home.ctaText}</p>
           </div>
-          <div className="flex flex-wrap gap-2 md:justify-end">
+          <div className="cta-actions">
             <Link href={p('/olustur?tur=deneyim')} className="btn btn-primary">
               <Icon name="camera" size={16} /> {t.home.shareExperience}
             </Link>
@@ -427,6 +446,29 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
             </Link>
           </div>
         </div>
+      </section>
+
+      <section className="wrap py-12" aria-label={t.home.blogTitle}>
+        <div className="section-heading">
+          <div>
+            <p className="section-eyebrow">{t.home.blogEyebrow}</p>
+            <h2>{t.home.blogTitle}</h2>
+          </div>
+          <Link href={p('/blog')}>
+            {t.home.blogAll} <Icon name="arrow-right" size={16} />
+          </Link>
+        </div>
+        {blogPosts.length > 0 ? (
+          <div className="blog-grid mt-6">
+            {blogPosts.map((post) => (
+              <BlogCard key={post.id} post={post} locale={locale} />
+            ))}
+          </div>
+        ) : (
+          <div className="mt-6">
+            <EmptyState title={t.home.blogEmpty} description={t.home.blogEmptyText} />
+          </div>
+        )}
       </section>
     </div>
   );

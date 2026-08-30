@@ -156,6 +156,10 @@ export const en: typeof tr = {
     blogEyebrow: 'Blog',
     blogTitle: 'Articles from our editors',
     blogAll: 'All articles',
+    blogEmpty: 'No blog articles yet',
+    blogEmptyText: 'Our editors’ first articles will appear here soon.',
+    scrollPrev: 'Scroll back',
+    scrollNext: 'Scroll forward',
     ctaEyebrow: 'Tell your story',
     ctaTitle: 'Threw the party? Share it with photos.',
     ctaText:

@@ -154,6 +154,10 @@ export const tr = {
     blogEyebrow: 'Blog',
     blogTitle: 'Editörlerden yazılar',
     blogAll: 'Tüm yazılar',
+    blogEmpty: 'Henüz blog yazısı yok',
+    blogEmptyText: 'Editörlerimizin ilk yazıları yakında burada olacak.',
+    scrollPrev: 'Geri kaydır',
+    scrollNext: 'İleri kaydır',
     ctaEyebrow: 'Sen de anlat',
     ctaTitle: 'Kutlamanı yaptın mı? Fotoğraflarınla paylaş.',
     ctaText:

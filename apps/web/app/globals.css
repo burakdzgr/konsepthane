@@ -3159,3 +3159,165 @@ textarea {
   font-size: 0.82rem;
   color: var(--muted);
 }
+
+/* Scroll rows (carousel affordance) ------------------------------------------------------- */
+.scroll-row {
+  position: relative;
+}
+.scroll-row-viewport {
+  overflow-x: auto;
+  scroll-snap-type: x proximity;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+.scroll-row-viewport::-webkit-scrollbar {
+  display: none;
+}
+.scroll-row::before,
+.scroll-row::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 3.5rem;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 160ms ease;
+  z-index: 1;
+}
+.scroll-row::before {
+  left: 0;
+  background: linear-gradient(90deg, var(--paper, #fdf7f1), transparent);
+}
+.scroll-row::after {
+  right: 0;
+  background: linear-gradient(270deg, var(--paper, #fdf7f1), transparent);
+}
+.scroll-row[data-scrollable='true'][data-at-start='false']::before,
+.scroll-row[data-scrollable='true'][data-at-end='false']::after {
+  opacity: 1;
+}
+.scroll-row-btn {
+  position: absolute;
+  top: 50%;
+  z-index: 2;
+  display: grid;
+  width: 40px;
+  height: 40px;
+  place-items: center;
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--ink);
+  box-shadow: var(--shadow-soft);
+  transform: translateY(-50%);
+  transition:
+    opacity 160ms ease,
+    border-color 140ms ease;
+}
+.scroll-row-btn:hover {
+  border-color: var(--ink);
+}
+.scroll-row-btn:disabled {
+  opacity: 0;
+  pointer-events: none;
+}
+.scroll-row-prev {
+  left: 0.25rem;
+}
+.scroll-row-next {
+  right: 0.25rem;
+}
+/* The category tiles are a plain grid on wide screens and a snapping row below 640px. */
+.scroll-row .visual-category-grid {
+  margin-top: 0;
+}
+@media (max-width: 640px) {
+  /* The wrapper (.scroll-row-viewport) is the scroll container; the grid only provides width. */
+  .scroll-row .visual-category-grid {
+    padding-bottom: 0;
+    overflow: visible;
+    scroll-snap-type: none;
+    width: max-content;
+    max-width: none;
+  }
+  .scroll-row-btn {
+    width: 34px;
+    height: 34px;
+  }
+}
+/* Header topic strip: same "there is more" hint on the right edge */
+.topic-strip {
+  position: relative;
+}
+.topic-strip::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 3rem;
+  pointer-events: none;
+  background: linear-gradient(270deg, #fff, rgba(255, 255, 255, 0));
+}
+@media (min-width: 1280px) {
+  .topic-strip::after {
+    display: none;
+  }
+}
+
+/* Discovery tabs as real tabs (buttons) */
+.discovery-tabs button {
+  min-height: 36px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.8);
+  padding: 0.35rem 0.9rem;
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 650;
+  color: var(--ink-2);
+  cursor: pointer;
+  transition:
+    border-color 140ms ease,
+    background-color 140ms ease,
+    color 140ms ease;
+}
+.discovery-tabs button:hover {
+  border-color: var(--ink);
+  background: #fff;
+}
+.discovery-tabs button.is-active {
+  border-color: var(--ink);
+  background: var(--ink);
+  color: #fff;
+}
+
+/* CTA band: the two actions share the row with equal width */
+.cta-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.6rem;
+}
+.cta-actions .btn {
+  width: 100%;
+  padding-inline: 0.8rem;
+  text-align: center;
+}
+@media (min-width: 900px) {
+  .cta-actions {
+    width: min(100%, 420px);
+    justify-self: end;
+  }
+}
+
+/* Hero form never wider than its column */
+.hero-search,
+.topic-chips {
+  max-width: 100%;
+  min-width: 0;
+}
+.empty-state {
+  width: 100%;
+  box-sizing: border-box;
+}
