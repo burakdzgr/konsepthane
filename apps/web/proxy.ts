@@ -1,4 +1,5 @@
 import { NextResponse, type NextRequest } from 'next/server';
+import { buildCsp, createNonce, cspHeaderName } from '@/lib/csp';
 
 const ACCESS_COOKIE = 'ilham_member_access';
 const REFRESH_COOKIE = 'ilham_member_refresh';
@@ -29,6 +30,8 @@ function detectLocale(request: NextRequest): Locale {
  *    redirected permanently (old `/konsept/x` links keep working). The resolved locale travels to
  *    Server Components via the `x-locale` header, the path via `x-pathname`.
  * 2. Silent member session refresh (Server Components cannot write cookies).
+ * 3. Per-request CSP nonce: sent to the browser in the CSP header and to Next (request header)
+ *    so its inline/bootstrap scripts carry the nonce; `x-nonce` lets our own inline script use it.
  */
 export default async function proxy(request: NextRequest) {
   const { pathname, search } = request.nextUrl;
@@ -41,9 +44,14 @@ export default async function proxy(request: NextRequest) {
     return NextResponse.redirect(url, 308);
   }
   const locale = first;
+  const nonce = createNonce();
+  const csp = buildCsp(nonce);
   const headers = new Headers(request.headers);
   headers.set('x-locale', locale);
   headers.set('x-pathname', pathname);
+  headers.set('x-nonce', nonce);
+  // Next.js reads the nonce for its own <script> tags from this request header.
+  headers.set('content-security-policy', csp);
 
   const hasAccess = request.cookies.has(ACCESS_COOKIE);
   const refreshToken = request.cookies.get(REFRESH_COOKIE)?.value;
@@ -75,6 +83,7 @@ export default async function proxy(request: NextRequest) {
     headers.set('cookie', forwarded.join('; '));
   }
   const next = NextResponse.next({ request: { headers } });
+  next.headers.set(cspHeaderName, csp);
   next.cookies.set(LOCALE_COOKIE, locale, {
     sameSite: 'lax',
     secure,

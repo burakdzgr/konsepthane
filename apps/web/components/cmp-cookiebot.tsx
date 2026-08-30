@@ -24,7 +24,16 @@ type CmpWindow = Window & {
   gtag?: (...args: unknown[]) => void;
 };
 
-export function CookiebotHead({ cbid, locale }: { cbid?: string | undefined; locale: string }) {
+export function CookiebotHead({
+  cbid,
+  locale,
+  nonce,
+}: {
+  cbid?: string | undefined;
+  locale: string;
+  /** CSP nonce from proxy.ts (`x-nonce`); required for the inline bootstrap under strict CSP. */
+  nonce?: string | undefined;
+}) {
   if (!cbid) return null;
   // One inline script so the order is deterministic even though React hoists resource scripts:
   // Consent Mode v2 defaults (all denied) are set first, then uc.js is injected.
@@ -35,7 +44,13 @@ export function CookiebotHead({ cbid, locale }: { cbid?: string | undefined; loc
     "(function(){var s=document.createElement('script');s.id='Cookiebot';s.src='https://consent.cookiebot.com/uc.js';" +
     `s.setAttribute('data-cbid',${JSON.stringify(cbid)});s.setAttribute('data-blockingmode','auto');s.setAttribute('data-culture',${JSON.stringify(locale)});` +
     's.async=true;document.head.appendChild(s);})();';
-  return <script id="kh-consent-bootstrap" dangerouslySetInnerHTML={{ __html: bootstrap }} />;
+  return (
+    <script
+      id="kh-consent-bootstrap"
+      nonce={nonce}
+      dangerouslySetInnerHTML={{ __html: bootstrap }}
+    />
+  );
 }
 
 function loadAnalytics(gaId: string) {

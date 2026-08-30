@@ -172,3 +172,20 @@ satıcı listesini kendisi gösterir).
 
 Ücretsiz plan sınırı: Cookiebot ücretsiz katman tek alan adı ve ~50 alt sayfa tarar; site
 büyüdükçe ücretli plana geçmek gerekir (alternatif: CookieYes, aynı entegrasyon adımları).
+
+## 9. Güvenlik başlıkları (Lighthouse "Best Practices")
+
+- **HSTS** (`max-age=31536000; includeSubDomains`) ve **COOP** (`same-origin`): hem web uygulaması
+  (`next.config.ts headers()`) hem proje nginx'i ekler. Cloudflare → SSL/TLS → Edge Certificates →
+  HSTS'i de açın (Cloudflare kenarında da gönderilsin). `preload` bilinçli olarak kapalı.
+- **CSP** (`apps/web/lib/csp.ts`, `proxy.ts`): istek başına nonce + `strict-dynamic`. Next'in kendi
+  script'leri nonce'u CSP istek başlığından alır; Cookiebot bootstrap'i `x-nonce` ile alır; Cookiebot ve
+  onay sonrası GA'nın enjekte ettiği script'ler `strict-dynamic` sayesinde geçer. Allowlist:
+  Cookiebot, Google Analytics/Tag Manager/google.com/doubleclick (ping'ler), `media.konsepthane.net`
+  (görsel), `*.googleusercontent.com` (Google avatarları). `style-src 'unsafe-inline'` kalır (Cookiebot
+  inline stil basar).
+- İhlaller `/api/csp-report`'a gider ve `docker compose … logs web | grep '\[csp\]'` ile görülür.
+  Yeni bir üçüncü taraf (AdSense vb.) eklenecekse önce `.env` → `CSP_REPORT_ONLY=1` ile gözlemleyin,
+  allowlist'i genişletip `0`'a çekin.
+- Bilinçli olarak yapılmayan: Trusted Types (`require-trusted-types-for`) — React/Next ve Cookiebot'un
+  DOM enjeksiyonunu kırar.

@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 import { Poppins } from 'next/font/google';
 import Link from 'next/link';
+import { headers } from 'next/headers';
 import { notFound } from 'next/navigation';
 import { defaultDescription, siteName } from '@ilham/seo';
 import { CookiebotBridge, CookiebotHead, CookieSettingsLink } from '@/components/cmp-cookiebot';
@@ -141,10 +142,12 @@ export default async function LocaleLayout({
     ],
   ];
   const cookiebotId = process.env.NEXT_PUBLIC_COOKIEBOT_ID || undefined;
+  // CSP nonce minted in proxy.ts; the consent bootstrap is our only inline script.
+  const nonce = (await headers()).get('x-nonce') ?? undefined;
   return (
     <html lang={htmlLang[locale]} className={poppins.variable}>
       <head>
-        <CookiebotHead cbid={cookiebotId} locale={locale} />
+        <CookiebotHead cbid={cookiebotId} locale={locale} nonce={nonce} />
       </head>
       <body>
         <SessionProvider>

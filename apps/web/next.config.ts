@@ -17,6 +17,9 @@ function remotePattern(url: string) {
 const config: NextConfig = {
   transpilePackages: ['@ilham/ui', '@ilham/seo', '@ilham/shared-types', '@ilham/validation'],
   poweredByHeader: false,
+  // Dev only: lets the dev server be reached as konsepthane.net (Cookiebot serves the dialog only
+  // for the registered domain), e.g. via a browser-level host mapping. Ignored by `next start`.
+  allowedDevOrigins: ['konsepthane.net'],
   // `globalNotFound`: branded 404 (app/global-not-found.tsx) for URLs outside the [locale] tree.
   experimental: { optimizePackageImports: ['@ilham/ui'], globalNotFound: true },
   images: {
@@ -41,6 +44,10 @@ const config: NextConfig = {
           { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
           { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=()' },
           { key: 'X-Content-Type-Options', value: 'nosniff' },
+          // Browsers only honour HSTS over HTTPS, so this is inert in local development.
+          { key: 'Strict-Transport-Security', value: 'max-age=31536000; includeSubDomains' },
+          // Isolate the browsing context; sign-in uses redirects (no popups), so `same-origin` is safe.
+          { key: 'Cross-Origin-Opener-Policy', value: 'same-origin' },
         ],
       },
       {
