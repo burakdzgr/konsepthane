@@ -45,7 +45,7 @@ services:
   api:
     build: { context: ., dockerfile: infra/docker/Dockerfile, args: { APP: api, <<: *build-args } }
     environment: *prod-env
-    ports: ['127.0.0.1:${API_PORT:-4010}:4000']
+    ports: !override ['127.0.0.1:${API_PORT:-4010}:4000']
     restart: always
     depends_on: !override
       migrate: { condition: service_completed_successfully }
@@ -54,19 +54,19 @@ services:
   worker:
     build: { context: ., dockerfile: infra/docker/Dockerfile, args: { APP: worker, <<: *build-args } }
     environment: *prod-env
-    ports: ['127.0.0.1:${WORKER_PORT:-4011}:4001']
+    ports: !override ['127.0.0.1:${WORKER_PORT:-4011}:4001']
     restart: always
 
   web:
     build: { context: ., dockerfile: infra/docker/Dockerfile, args: { APP: web, <<: *build-args } }
     environment: *prod-env
-    ports: ['127.0.0.1:${WEB_PORT:-3210}:3000']
+    ports: !override ['127.0.0.1:${WEB_PORT:-3210}:3000']
     restart: always
 
   admin:
     build: { context: ., dockerfile: infra/docker/Dockerfile, args: { APP: admin, <<: *build-args } }
     environment: *prod-env
-    ports: ['127.0.0.1:${ADMIN_PORT:-3211}:3001']
+    ports: !override ['127.0.0.1:${ADMIN_PORT:-3211}:3001']
     restart: always
 
   migrate:
