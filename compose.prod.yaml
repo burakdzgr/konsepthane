@@ -2,8 +2,9 @@
 #   docker compose -f compose.yaml -f compose.prod.yaml up -d --build
 #
 # Deployment shape (Plesk host): Plesk's nginx owns 80/443 and TLS (Let's Encrypt) and proxies
-# `konsepthane.net` to the project's own nginx on 127.0.0.1:${NGINX_PORT}. Every other app port is
-# bound to localhost only; databases are never bound to the host. Media lives in Cloudflare R2
+# `konsepthane.net` to the project's own nginx on 127.0.0.1:${NGINX_PORT}. App containers and
+# databases are never bound to the host (the router reaches them on the compose network), which
+# also lets `infra/deploy/update.sh` run old and new copies side by side for zero-downtime deploys. Media lives in Cloudflare R2
 # (public host media.konsepthane.net), e-mail goes out through Brevo SMTP — MinIO/Mailpit are
 # dev-only here.
 #
@@ -47,7 +48,7 @@ services:
     # The base file runs dev servers; production must run the compiled apps.
     command: pnpm --filter @ilham/api start
     environment: *prod-env
-    ports: !override ['127.0.0.1:${API_PORT:-4010}:4000']
+    ports: !override [] # reached only through the router (no host port → rolling updates)
     restart: always
     depends_on: !override
       migrate: { condition: service_completed_successfully }
@@ -57,21 +58,21 @@ services:
     build: { context: ., dockerfile: infra/docker/Dockerfile, args: { APP: worker, <<: *build-args } }
     command: pnpm --filter @ilham/worker start
     environment: *prod-env
-    ports: !override ['127.0.0.1:${WORKER_PORT:-4011}:4001']
+    ports: !override [] # reached only through the router (no host port → rolling updates)
     restart: always
 
   web:
     build: { context: ., dockerfile: infra/docker/Dockerfile, args: { APP: web, <<: *build-args } }
     command: pnpm --filter @ilham/web start
     environment: *prod-env
-    ports: !override ['127.0.0.1:${WEB_PORT:-3210}:3000']
+    ports: !override [] # reached only through the router (no host port → rolling updates)
     restart: always
 
   admin:
     build: { context: ., dockerfile: infra/docker/Dockerfile, args: { APP: admin, <<: *build-args } }
     command: pnpm --filter @ilham/admin start
     environment: *prod-env
-    ports: !override ['127.0.0.1:${ADMIN_PORT:-3211}:3001']
+    ports: !override [] # reached only through the router (no host port → rolling updates)
     restart: always
 
   migrate:

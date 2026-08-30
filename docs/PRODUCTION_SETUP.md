@@ -31,7 +31,7 @@ isteklerini projenin kendi nginx'ine (`127.0.0.1:8180`) proxy'ler. Public URL'le
 | Host portu | Servis |
 | --- | --- |
 | `127.0.0.1:8180` | proje nginx'i (web/admin/api yönlendirmesi) — `NGINX_PORT` |
-| `127.0.0.1:3210 / 3211 / 4010 / 4011` | web / admin / api / worker (`*_PORT`) |
+| — | web / admin / api / worker: host portu yok, router compose ağından ulaşır (`*_PORT` değerleri artık kullanılmaz) |
 | — | postgres, redis, meilisearch host'a bağlanmaz |
 
 Medya Cloudflare R2'de (`media.konsepthane.net`), e-posta Brevo SMTP'de; MinIO/Mailpit yalnızca
@@ -70,7 +70,10 @@ SSL/TLS Certificates → Let's Encrypt → `konsepthane.net` + `www` (Cloudflare
 HTTP-01 çalışır) → "Permanent SEO-safe 301 redirect from HTTP to HTTPS" açık. Cloudflare → SSL/TLS
 → **Full (strict)**. `www` → apex yönlendirmesini proje nginx'i de yapar.
 
-Güncelleme: `./infra/deploy/update.sh` (git pull → build → up; migrasyonlar `migrate` servisinde).
+Güncelleme: `./infra/deploy/update.sh` — **kesintisiz**: git pull → build → `migrate` → her uygulama için yeni
+konteyneri eskisinin yanında başlatır, sağlıklı olunca eskiyi kapatır (router adları her istekte çözdüğü için
+yeni konteyneri otomatik görür) → nginx `reload` (restart değil). Yeni sürüm sağlıklı olmazsa eski sürüm
+çalışmaya devam eder ve betik hata verir.
 
 ## 4. Doğrulama
 

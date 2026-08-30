@@ -16,7 +16,8 @@ command -v docker >/dev/null || fail "docker kurulu değil"
 docker compose version >/dev/null || fail "docker compose plugin yok"
 FREE_GB=$(df -BG --output=avail / | tail -1 | tr -dc '0-9')
 [ "$FREE_GB" -ge 8 ] || fail "Diskte en az 8 GB boş alan gerekli (şu an ${FREE_GB} GB). docker builder prune / image prune ile yer açın."
-for p in $(grep -E '^(NGINX|WEB|ADMIN|API|WORKER)_PORT=' .env | cut -d= -f2); do
+# Only the router binds a host port; app containers are reached on the compose network.
+for p in $(grep -E '^NGINX_PORT=' .env | cut -d= -f2); do
   if ss -tulnH | grep -qE "127\.0\.0\.1:$p\b|0\.0\.0\.0:$p\b|\*:$p\b"; then
     if ! $COMPOSE ps --format '{{.Ports}}' 2>/dev/null | grep -q ":$p->"; then fail "Port $p host üzerinde başka bir süreç tarafından kullanılıyor."; fi
   fi
