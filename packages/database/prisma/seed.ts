@@ -11,41 +11,14 @@ import {
   UserStatus,
 } from '@prisma/client';
 
-import { PERMISSION_KEYS, ROLE_KEYS, ROLE_NAMES, rolePermissions } from '../src';
+import { bootstrapStructure } from './bootstrap';
 
 const prisma = new PrismaClient();
 
-const roles = ROLE_KEYS.map((key) => [key, ROLE_NAMES[key]] as const);
-const permissions = PERMISSION_KEYS;
-
 async function main() {
-  const permissionRows = await Promise.all(
-    permissions.map((key) =>
-      prisma.permission.upsert({
-        where: { key },
-        update: {},
-        create: { key, description: `${key} yetkisi` },
-      }),
-    ),
-  );
-
-  for (const [key, name] of roles) {
-    const role = await prisma.role.upsert({
-      where: { key },
-      update: { name },
-      create: { key, name },
-    });
-    const granted = new Set<string>(rolePermissions(key));
-    const allowed = permissionRows.filter((item) => granted.has(item.key));
-    // Role grants are authoritative: stale permissions from earlier seeds are revoked.
-    await prisma.rolePermission.deleteMany({
-      where: { roleId: role.id, permissionId: { notIn: allowed.map((item) => item.id) } },
-    });
-    await prisma.rolePermission.createMany({
-      data: allowed.map((permission) => ({ roleId: role.id, permissionId: permission.id })),
-      skipDuplicates: true,
-    });
-  }
+  // Roles, permissions, grants and the base taxonomy come from the shared bootstrap (same code
+  // path as `reset:launch`), so the sample seed can never drift from production structure.
+  console.log('structure', await bootstrapStructure(prisma));
 
   const adminRole = await prisma.role.findUniqueOrThrow({ where: { key: 'super_admin' } });
   const email = process.env.ADMIN_EMAIL ?? 'admin@ilham.local';

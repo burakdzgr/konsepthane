@@ -11,6 +11,7 @@
     "migrate:deploy": "prisma migrate deploy",
     "seed": "tsx prisma/seed.ts",
     "reset:launch": "tsx prisma/reset-launch.ts",
+    "bootstrap": "tsx prisma/bootstrap.ts",
     "studio": "prisma studio",
     "lint": "eslint src prisma --max-warnings=0",
     "typecheck": "tsc -p tsconfig.json --noEmit",

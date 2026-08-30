@@ -9,6 +9,7 @@
  */
 import { hash } from 'bcrypt';
 import { PrismaClient, ProfileKind, UserStatus } from '@prisma/client';
+import { bootstrapStructure } from './bootstrap';
 
 const prisma = new PrismaClient();
 
@@ -19,7 +20,8 @@ async function main() {
   const username = process.env.ADMIN_USERNAME ?? 'konsepthane';
   const displayName = process.env.ADMIN_DISPLAY_NAME ?? 'Konsepthane';
   const password = process.env.ADMIN_PASSWORD;
-  if (!password || password.length < 10) throw new Error('ADMIN_PASSWORD en az 10 karakter olmalı.');
+  if (!password || password.length < 10)
+    throw new Error('ADMIN_PASSWORD en az 10 karakter olmalı.');
 
   // Dependency-ordered deletes (children first). Taxonomy/RBAC tables are intentionally absent.
   const steps: Array<[string, () => Promise<unknown>]> = [
@@ -66,13 +68,18 @@ async function main() {
   ];
   for (const [label, run] of steps) {
     const result = (await run()) as { count?: number };
-    console.log(`  cleared ${label}${typeof result.count === 'number' ? ` (${result.count})` : ''}`);
+    console.log(
+      `  cleared ${label}${typeof result.count === 'number' ? ` (${result.count})` : ''}`,
+    );
   }
 
   // Denormalised counters on the kept taxonomy must not remember deleted content.
   const topics = await prisma.topic.updateMany({ data: { contentCount: 0, followerCount: 0 } });
   console.log(`  reset topic counters (${topics.count})`);
 
+  // A fresh launch database has no roles/taxonomy yet: create (or re-sync) them first.
+  const structure = await bootstrapStructure(prisma);
+  console.log('  structure', structure);
   const role = await prisma.role.findUniqueOrThrow({ where: { key: 'super_admin' } });
   const admin = await prisma.user.create({
     data: {

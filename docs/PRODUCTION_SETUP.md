@@ -52,6 +52,12 @@ docker builder prune -f && docker image prune -f      # yer açmak için (diğer
 (RAM için), `up -d` yapar, api sağlıklı olana kadar bekler, kullanıcı tablosu boşsa `reset:launch`
 ile admin'i (`ADMIN_USERNAME` / `ADMIN_EMAIL` / `ADMIN_PASSWORD`) oluşturur.
 
+`reset:launch` boş bir yayın veritabanında önce yapısal veriyi kurar (`prisma/bootstrap.ts`: rol/izin
+kataloğu ve grant'ler, kategoriler, etkinlik türleri, temalar, renkler, konular, özellik bayrakları — içerik
+ya da örnek üye yok), sonra tek `super_admin`'i oluşturur; tekrar çalıştırmak kayıt çoğaltmaz. Aynı bootstrap
+yerel örnek seed'i (`SEED_SAMPLE_DATA=1`) tarafından da kullanılır. Test: `TEST_DATABASE_URL=… pnpm --filter
+@ilham/database test` (boş DB → migrate → reset → tek admin, tüm izinler).
+
 ## 3. Plesk tarafı
 
 Websites & Domains → `konsepthane.net` → **Apache & nginx Settings**:
