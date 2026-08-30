@@ -30,6 +30,8 @@ done
 
 step "Servisler başlatılıyor (migrate → api → web/admin/worker → nginx)"
 $COMPOSE up -d --remove-orphans
+# Recreated app containers get new IPs; make sure the router picks them up.
+$COMPOSE restart nginx >/dev/null
 
 step "Sağlık bekleniyor"
 for i in $(seq 1 60); do
