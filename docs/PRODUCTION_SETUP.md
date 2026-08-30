@@ -163,9 +163,10 @@ Kurulum (https://www.cookiebot.com):
 5. Tarama (scan) tamamlanınca çerezlerin doğru kategoriye atandığını kontrol edin: oturum
    çerezleri (`ilham_member_*`, `konsepthane_admin_*`, `kh_oauth`) → **Necessary**, `_ga*` →
    **Statistics**, reklam çerezleri → **Marketing**.
-6. Doğrulama: onay öncesi ağ sekmesinde `googletagmanager.com` isteği **olmamalı**; "Tümünü
-   kabul et" sonrası `gtag.js` yüklenmeli; "Reddet" sonrası hiç yüklenmemeli; footer "Çerez
-   ayarları" pencereyi yeniden açmalı. `document.cookie` içinde `CookieConsent` çerezi görünmeli.
+6. Doğrulama (Consent Mode **advanced**): `gtag.js` sayfayla birlikte yüklenir ama onay öncesi
+   ping'ler `gcs=G100` (tüm sinyaller denied, `_ga` çerezi yok); "Tümüne izin ver" sonrası `gcs=G111`
+   ve `_ga` çerezi oluşur; "Reddet" → G100'de kalır (çerezsiz, modellemeye uygun anonim ping). Footer
+   "Çerez ayarları" pencereyi yeniden açar; `?cookiebot=show` tasarım QA'sı için diyaloğu zorla açar.
 
 AdSense öncesi sıra: gerçek içerik (kategori başına yayınlanmış konseptler)
 → CMP canlı ve TCF etkin → `ads.txt` (AdSense'in verdiği satır) `apps/web/public/ads.txt` →

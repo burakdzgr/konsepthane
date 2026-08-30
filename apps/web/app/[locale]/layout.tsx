@@ -143,7 +143,12 @@ export default async function LocaleLayout({
   return (
     <html lang={htmlLang[locale]} className={poppins.variable}>
       <head>
-        <CookiebotHead cbid={cookiebotId} locale={locale} nonce={nonce} />
+        <CookiebotHead
+          cbid={cookiebotId}
+          locale={locale}
+          nonce={nonce}
+          gaId={process.env.NEXT_PUBLIC_GA_ID}
+        />
       </head>
       <body>
         <SessionProvider>
@@ -203,7 +208,7 @@ export default async function LocaleLayout({
                 </div>
                 {footerColumns.map(([title, links]) => (
                   <div key={title}>
-                    <h4>{title}</h4>
+                    <h3>{title}</h3>
                     {links.map(([label, href]) => (
                       <Link key={href} href={href}>
                         {label}
