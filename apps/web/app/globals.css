@@ -2293,6 +2293,17 @@ textarea {
   background: var(--accent-strong) !important;
   color: #fff !important;
 }
+/* Header: Cookiebot's placeholder icon (top-left) becomes the Konsepthane wordmark. The
+   "Cookiebot by Usercentrics" mark on the right stays — removing it is a paid-plan feature. */
+#CybotCookiebotDialogPoweredbyImage {
+  display: none !important;
+}
+#CybotCookiebotDialogPoweredbyLink {
+  display: block !important;
+  width: 150px !important;
+  height: 40px !important;
+  background: url('/brand/konsepthane-logo.png?v=2') left center / contain no-repeat !important;
+}
 /* Backdrop — keep the page readable (no blackout) */
 #CybotCookiebotDialogBodyUnderlay {
   background: rgba(32, 27, 24, 0.14) !important;
