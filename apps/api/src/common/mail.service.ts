@@ -13,6 +13,9 @@ export class MailService {
   private readonly logger = new Logger(MailService.name);
   private readonly from = process.env.MAIL_FROM ?? 'Konsepthane <noreply@konsepthane.net>';
   private readonly transport: Transporter = createTransport({
+    // Transactional messages are generated in memory, never loaded from paths/URLs.
+    disableFileAccess: true,
+    disableUrlAccess: true,
     host: process.env.SMTP_HOST ?? 'localhost',
     port: Number(process.env.SMTP_PORT ?? 1025),
     secure: process.env.SMTP_SECURE === 'true',

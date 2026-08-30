@@ -31,7 +31,7 @@ Markdown sınırlamaları nedeniyle birleştirilmiş hücre, yazı tipi, yazı r
 - Gerçek yerel tarayıcıda: değişmemiş içeriği aynen gönderme, metin yazma, H3 seçme, görsel URL ve alt metin ekleme, önizleme, minimum uzunluk engeli, form sıfırlama, bağımsız ikinci editör. 343 px editör alanında yatay taşma görülmedi. Bu dar konteyner testidir, fiziksel telefon testi değildir.
 - Tarayıcı test sayfası yereldi ve commit öncesi kaldırıldı. Canlı içerik yayınlanmadı/değiştirilmedi.
 
-`pnpm audit --prod`: 33 mevcut altyapı bildirimi (1 kritik, 14 yüksek, 16 orta, 2 düşük); yollar API ve Prisma/veritabanı bağımlılıklarında. Kritik `fast-xml-parser@5.2.5` önceki lockfile'da da bulunuyordu. Yeni Tiptap/Markdown renderer yollarında bildirim görülmedi. Bu sonuç tüm uygulamanın güvenli olduğunu kanıtlamaz. Altyapı paketlerinin güvenlik güncellemesi ayrı bir iş olarak ele alınmalı; bu commit toplu bağımlılık yükseltmesi yapmaz.
+Editörün ilk tesliminde `pnpm audit --prod` 33 mevcut altyapı bildirimi gösteriyordu (1 kritik, 14 yüksek, 16 orta, 2 düşük). Bunlar sonraki güvenlik güncellemesinde giderildi; güncel paketler ve doğrulama sınırları için [bağımlılık güvenliği notlarına](SECURITY-DEPENDENCIES.md) bakın. Tiptap/Markdown renderer yollarında ilk taramada bildirim görülmemişti.
 
 ## Sunucuya alma
 

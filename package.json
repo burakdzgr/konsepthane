@@ -13,6 +13,7 @@
     "lint": "turbo lint",
     "typecheck": "turbo typecheck",
     "test": "turbo test",
+    "security:audit": "pnpm audit --prod && pnpm audit",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "db:generate": "pnpm --filter @ilham/database generate",
@@ -33,7 +34,7 @@
     "eslint-config-prettier": "10.1.8",
     "globals": "16.3.0",
     "prettier": "3.6.2",
-    "turbo": "2.5.6",
+    "turbo": "2.10.12",
     "typescript": "5.9.2",
     "typescript-eslint": "8.43.0"
   }

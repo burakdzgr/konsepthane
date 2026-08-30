@@ -12,13 +12,13 @@
   },
   "dependencies": {
     "@ilham/database": "workspace:*",
-    "bullmq": "5.58.5",
-    "ioredis": "5.7.0"
+    "bullmq": "5.81.4",
+    "ioredis": "5.11.1"
   },
   "devDependencies": {
     "@types/node": "22.18.3",
     "tsx": "4.20.5",
     "typescript": "5.9.2",
-    "vitest": "3.2.4"
+    "vitest": "3.2.7"
   }
 }

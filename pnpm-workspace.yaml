@@ -2,6 +2,12 @@ packages:
   - apps/*
   - packages/*
 
+# Prisma 6's config loader pins vulnerable deepmerge-ts 7.1.5.
+# Keep Prisma's existing engine/schema contract; validate this scoped major override
+# with packages/database/test/config-security.spec.ts and prisma validate/generate.
+overrides:
+  '@prisma/config@6.19.3>deepmerge-ts': '8.0.2'
+
 onlyBuiltDependencies:
   - '@nestjs/core'
   - '@prisma/client'

@@ -2,6 +2,7 @@ import {
   BadRequestException,
   Body,
   Controller,
+  Inject,
   Post,
   Req,
   UploadedFile,
@@ -29,7 +30,7 @@ class CreateUploadDto {
 @ApiBearerAuth()
 @Controller('media')
 export class MediaController {
-  constructor(private readonly storage: S3StorageService) {}
+  constructor(@Inject(S3StorageService) private readonly storage: S3StorageService) {}
 
   /** Presigned direct-to-bucket upload (browser → S3); used by member-facing flows. */
   @Post('uploads')
@@ -49,11 +50,26 @@ export class MediaController {
   @RequirePermissions('media.manage')
   @UseInterceptors(
     FileInterceptor('file', {
-      limits: { fileSize: MAX_IMAGE_BYTES, files: 1 },
+      // This endpoint accepts exactly one file and no text fields. Reject nested
+      // field names and excess multipart parts before they can consume resources.
+      // Busboy emits partsLimit on reaching the threshold, including the valid
+      // first part. A budget of two lets that part finish; files/fields enforce one.
+      limits: { fileSize: MAX_IMAGE_BYTES, files: 1, fields: 0, parts: 2, headerPairs: 32 },
+      fileFilter: (_request, file, callback) => {
+        if (!(IMAGE_MIME_TYPES as readonly string[]).includes(file.mimetype)) {
+          callback(
+            new BadRequestException('Yalnızca JPEG, PNG, WebP veya AVIF görsel yüklenebilir.'),
+            false,
+          );
+          return;
+        }
+        callback(null, true);
+      },
     }),
   )
   async upload(@Req() request: AuthenticatedRequest, @UploadedFile() file?: UploadedBinary) {
     if (!file) throw new BadRequestException('Dosya bulunamadı (alan adı: file).');
+    if (file.size === 0) throw new BadRequestException('Boş dosya yüklenemez.');
     if (!(IMAGE_MIME_TYPES as readonly string[]).includes(file.mimetype))
       throw new BadRequestException('Yalnızca JPEG, PNG, WebP veya AVIF görsel yüklenebilir.');
     if (file.size > MAX_IMAGE_BYTES)
