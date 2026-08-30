@@ -134,4 +134,15 @@ export class AuthController {
   logout(@Body() input: RefreshDto) {
     return this.auth.logout(input.refreshToken);
   }
+
+  @Delete('me')
+  @UseGuards(JwtAuthGuard)
+  @Throttle({ default: { limit: 3, ttl: 60_000 } })
+  @ApiOperation({
+    summary:
+      'Delete the current member account (store requirement): anonymise, revoke sessions, drop personal data',
+  })
+  deleteMe(@Req() request: AuthenticatedRequest) {
+    return this.auth.deleteAccount(request.user.sub);
+  }
 }

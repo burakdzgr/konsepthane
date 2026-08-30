@@ -465,6 +465,12 @@ export const tr = {
       unlink: 'Bağlantıyı kaldır',
       unlinkNeedsPassword: 'Kaldırmak için önce bir parola oluştur.',
       unlinked: 'Google bağlantısı kaldırıldı.',
+      dangerZone: 'Hesabı sil',
+      deleteAccountText:
+        'Hesabın kapatılır; e-postan, parolan, bağlı hesapların, kaydettiklerin ve takiplerin kalıcı olarak silinir. Yayımladığın içerikler “Silinmiş üye” adıyla kalır. Bu işlem geri alınamaz.',
+      deleteConfirmLabel: 'Anladım, hesabımı kalıcı olarak silmek istiyorum.',
+      deleteAccount: 'Hesabımı sil',
+      deleted: 'Hesabın silindi. Konsepthane’de olduğun için teşekkürler.',
     },
     authModal: {
       title: 'Konsepthane’ye hoş geldin',

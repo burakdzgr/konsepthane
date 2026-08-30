@@ -41,6 +41,9 @@ x-prod-env: &prod-env
   SMTP_PORT: ${SMTP_PORT:-587}
   SMTP_SECURE: ${SMTP_SECURE:-false}
   MEILI_ENV: production
+  # Mobile app deep links (/.well-known files are served only when these are set).
+  APPLE_TEAM_ID: ${APPLE_TEAM_ID:-}
+  ANDROID_CERT_SHA256: ${ANDROID_CERT_SHA256:-}
 
 services:
   api:

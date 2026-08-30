@@ -112,6 +112,6 @@ export default async function proxy(request: NextRequest) {
 
 export const config = {
   matcher: [
-    '/((?!_next/|api/|media/|placeholders/|brand/|favicon|robots.txt|sitemap|opengraph-image|twitter-image|icon|apple-icon|manifest|.*\\.(?:png|jpg|jpeg|gif|webp|avif|svg|ico|txt|xml|json|webmanifest|woff2?)$).*)',
+    '/((?!_next/|api/|media/|placeholders/|brand/|\\.well-known/|favicon|robots.txt|sitemap|opengraph-image|twitter-image|icon|apple-icon|manifest|.*\\.(?:png|jpg|jpeg|gif|webp|avif|svg|ico|txt|xml|json|webmanifest|woff2?)$).*)',
   ],
 };

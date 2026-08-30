@@ -459,6 +459,12 @@ export const en: typeof tr = {
       unlink: 'Disconnect',
       unlinkNeedsPassword: 'Create a password before disconnecting.',
       unlinked: 'Google account disconnected.',
+      dangerZone: 'Delete account',
+      deleteAccountText:
+        'Your account is closed; your e-mail, password, linked accounts, saved items and follows are permanently deleted. Content you published stays under the name “Deleted member”. This cannot be undone.',
+      deleteConfirmLabel: 'I understand and want to permanently delete my account.',
+      deleteAccount: 'Delete my account',
+      deleted: 'Your account has been deleted. Thank you for being part of Konsepthane.',
     },
     authModal: {
       title: 'Welcome to Konsepthane',

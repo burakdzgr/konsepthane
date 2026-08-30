@@ -193,3 +193,20 @@ büyüdükçe ücretli plana geçmek gerekir (alternatif: CookieYes, aynı enteg
   allowlist'i genişletip `0`'a çekin.
 - Bilinçli olarak yapılmayan: Trusted Types (`require-trusted-types-for`) — React/Next ve Cookiebot'un
   DOM enjeksiyonunu kırar.
+
+## 10. Mobil uygulama (konsepthane-mobile) bağlantıları
+
+Uygulama ayrı bir repodadır (`konsepthane-mobile`, Expo) ve **aynı API'yi** kullanır; ekstra servis gerekmez.
+Sunucu tarafında yalnızca derin bağlantı dosyaları için iki değişken vardır (`.env.production`):
+
+| Değişken | Nereden | Ne açar |
+| --- | --- | --- |
+| `APPLE_TEAM_ID` | App Store Connect → Membership → Team ID | `/.well-known/apple-app-site-association` (iOS Universal Links) |
+| `ANDROID_CERT_SHA256` | `eas credentials` (Android keystore) + Play Console → App signing; virgülle birden fazla | `/.well-known/assetlinks.json` (Android App Links) |
+
+Boş bırakıldıklarında iki adres de 404 döner; doldurup `./infra/deploy/update.sh` çalıştırınca yayınlanır.
+Doğrulama: `curl -s https://konsepthane.net/.well-known/assetlinks.json` ve Apple için
+`https://app-site-association.cdn-apple.com/a/v1/konsepthane.net`.
+
+Hesap silme (mağaza zorunluluğu): `DELETE /api/v1/auth/me` — uygulamadan (Profil → Hesabı sil) ve
+web'den (`/tr/hesap` → Hesabı sil) erişilebilir. Hesap anonimleştirilir, oturumlar/kayıtlar/takipler silinir.

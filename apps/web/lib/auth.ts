@@ -87,6 +87,8 @@ export const unlinkProvider = (provider: string) =>
   memberApi(`/auth/providers/${encodeURIComponent(provider)}`, { method: 'DELETE' });
 export const requestPasswordSetup = () =>
   memberApi('/auth/password-setup-link', { method: 'POST' });
+/** Self-service account deletion (same endpoint the mobile app uses). */
+export const deleteAccount = () => memberApi('/auth/me', { method: 'DELETE' });
 
 export const registerMember = (email: string, password: string, displayName: string) =>
   publicAuthPost('register', { email, password, displayName });

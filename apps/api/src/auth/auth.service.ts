@@ -476,6 +476,83 @@ export class AuthService {
     return { revoked: true };
   }
 
+  /**
+   * Self-service account deletion (App Store 5.1.1(v) / Play "delete account" requirement).
+   * Public content the member authored stays (as on the web, by the terms of use) but is detached
+   * from any personal data: e-mail, password, identity links, sessions, saves, follows and
+   * notifications are removed or anonymised, the profile becomes a private "Silinmiş üye".
+   */
+  async deleteAccount(userId: string) {
+    const user = await this.db.user.findUniqueOrThrow({
+      where: { id: userId },
+      select: {
+        id: true,
+        email: true,
+        status: true,
+        roles: { select: { role: { select: { key: true } } } },
+      },
+    });
+    if (user.roles.some(({ role }) => role.key === 'super_admin'))
+      throw new BadRequestException(
+        'Yönetici hesapları uygulama içinden silinemez; önce yönetici yetkisini devret.',
+      );
+    const stamp = new Date();
+    const tombstoneEmail = `deleted-${user.id}@deleted.konsepthane.invalid`;
+    await this.db.$transaction([
+      this.db.refreshSession.updateMany({
+        where: { userId, revokedAt: null },
+        data: { revokedAt: stamp },
+      }),
+      this.db.authToken.deleteMany({ where: { userId } }),
+      this.db.oAuthAccount.deleteMany({ where: { userId } }),
+      this.db.contentSave.deleteMany({ where: { userId } }),
+      this.db.topicFollow.deleteMany({ where: { userId } }),
+      this.db.questionFollow.deleteMany({ where: { userId } }),
+      this.db.discussionFollow.deleteMany({ where: { userId } }),
+      this.db.userFollow.deleteMany({ where: { OR: [{ followerId: userId }, { followingId: userId }] } }),
+      this.db.notification.deleteMany({ where: { userId } }),
+      this.db.userRole.deleteMany({ where: { userId } }),
+      this.db.profile.updateMany({
+        where: { userId },
+        data: {
+          displayName: 'Silinmiş üye',
+          username: null,
+          bio: null,
+          city: null,
+          avatarUrl: null,
+          websiteUrl: null,
+          longBio: null,
+          jobTitle: null,
+          expertise: [],
+          socialLinks: Prisma.DbNull,
+          isPublic: false,
+          editorActive: false,
+          followerCount: 0,
+          followingCount: 0,
+        },
+      }),
+      this.db.user.update({
+        where: { id: userId },
+        data: {
+          email: tombstoneEmail,
+          passwordHash: null,
+          emailVerifiedAt: null,
+          status: UserStatus.DELETED,
+          deletedAt: stamp,
+        },
+      }),
+      this.db.auditLog.create({
+        data: {
+          actorId: userId,
+          action: 'AUTH_ACCOUNT_DELETED',
+          entityType: 'user',
+          entityId: userId,
+        },
+      }),
+    ]);
+    return { deleted: true };
+  }
+
   private async issue(
     userId: string,
     email: string,

@@ -45,9 +45,9 @@ export default async function LoginPage({
   searchParams,
 }: {
   params: Promise<{ locale: string }>;
-  searchParams: Promise<{ next?: string; hata?: string }>;
+  searchParams: Promise<{ next?: string; hata?: string; mesaj?: string }>;
 }) {
-  const [{ locale: localeParam }, { next, hata }] = await Promise.all([params, searchParams]);
+  const [{ locale: localeParam }, { next, hata, mesaj }] = await Promise.all([params, searchParams]);
   const locale = asLocale(localeParam);
   const t = getDictionary(locale).pages.login;
   const p = (path: string) => localePath(locale, path);
@@ -57,6 +57,11 @@ export default async function LoginPage({
         <p className="section-eyebrow">{t.eyebrow}</p>
         <h1 className="mt-2 text-4xl">{t.heading}</h1>
         <p className="mt-3 text-sm leading-6 text-[var(--muted)]">{t.description}</p>
+        {mesaj && !hata && (
+          <p role="status" className="mt-4 rounded-2xl bg-[var(--mint)] p-3 text-sm">
+            {mesaj}
+          </p>
+        )}
         {hata && (
           <p
             role="alert"

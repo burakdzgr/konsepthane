@@ -6,6 +6,8 @@ import { AuthRequired } from '@/components/auth-modal';
 import { Flash } from '@/components/engagement';
 import { PageHeader } from '@/components/community-layout';
 import {
+  clearSession,
+  deleteAccount,
   getFollowedTopics,
   getLinkedProviders,
   getMember,
@@ -45,6 +47,24 @@ async function passwordSetupAction(formData: FormData) {
   }
   redirect(
     `${base}?mesaj=${encodeURIComponent(getDictionary(locale).pages.account.passwordLinkSent)}`,
+  );
+}
+
+async function deleteAccountAction(formData: FormData) {
+  'use server';
+  const locale = asLocale(formText(formData, 'locale'));
+  const base = localePath(locale, '/hesap');
+  if (formText(formData, 'confirm') !== 'on') redirect(base);
+  try {
+    await deleteAccount();
+  } catch (error) {
+    redirect(
+      `${base}?hata=${encodeURIComponent(error instanceof Error ? error.message : 'İşlem tamamlanamadı.')}`,
+    );
+  }
+  await clearSession();
+  redirect(
+    `${localePath(locale, '/giris')}?mesaj=${encodeURIComponent(getDictionary(locale).pages.account.deleted)}`,
   );
 }
 
@@ -174,6 +194,20 @@ export default async function AccountPage({ params }: { params: Promise<{ locale
               </a>
             )}
           </div>
+        </Card>
+        <Card className="border-[var(--accent-soft)] p-6">
+          <p className="section-eyebrow">{t.dangerZone}</p>
+          <p className="mt-2 text-sm text-[var(--muted)]">{t.deleteAccountText}</p>
+          <form action={deleteAccountAction} className="mt-4 grid gap-3">
+            <input type="hidden" name="locale" value={locale} />
+            <label className="flex items-start gap-2 text-sm">
+              <input type="checkbox" name="confirm" required className="mt-1" />
+              <span>{t.deleteConfirmLabel}</span>
+            </label>
+            <button type="submit" className="community-action is-remove justify-self-start">
+              {t.deleteAccount}
+            </button>
+          </form>
         </Card>
       </div>
     </>
