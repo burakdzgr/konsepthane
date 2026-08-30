@@ -296,31 +296,33 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
               </Link>
             </div>
           </div>
-          <div className="card-grid-4 mt-8">
-            {experiences.slice(0, 8).map((item) => (
-              <ExperienceCard
-                LinkComponent={Link}
-                ImageComponent={SmartImage}
-                imageSizes={cardSizes}
-                key={item.id}
-                title={item.title}
-                summary={item.summary ?? item.body}
-                href={p(`/deneyim/${item.slug}`)}
-                imageUrl={
-                  item.images[0]?.url ?? item.heroImageUrl ?? '/placeholders/home-birthday.svg'
-                }
-                imageAlt={item.images[0]?.altText ?? item.title}
-                authorName={item.author.profile?.displayName ?? t.cards.communityMember}
-                authorAvatarUrl={item.author.profile?.avatarUrl}
-                meta={[item.ageLabel, item.themeVariation ?? item.eventType?.name, item.venueType]
-                  .filter(Boolean)
-                  .join(' · ')}
-                reactions={item.reactionCount}
-                comments={item.commentCount}
-                badge={t.cards.realParty}
-              />
-            ))}
-          </div>
+          {experiences.length > 0 && (
+            <div className="card-grid-4 mt-8">
+              {experiences.slice(0, 8).map((item) => (
+                <ExperienceCard
+                  LinkComponent={Link}
+                  ImageComponent={SmartImage}
+                  imageSizes={cardSizes}
+                  key={item.id}
+                  title={item.title}
+                  summary={item.summary ?? item.body}
+                  href={p(`/deneyim/${item.slug}`)}
+                  imageUrl={
+                    item.images[0]?.url ?? item.heroImageUrl ?? '/placeholders/home-birthday.svg'
+                  }
+                  imageAlt={item.images[0]?.altText ?? item.title}
+                  authorName={item.author.profile?.displayName ?? t.cards.communityMember}
+                  authorAvatarUrl={item.author.profile?.avatarUrl}
+                  meta={[item.ageLabel, item.themeVariation ?? item.eventType?.name, item.venueType]
+                    .filter(Boolean)
+                    .join(' · ')}
+                  reactions={item.reactionCount}
+                  comments={item.commentCount}
+                  badge={t.cards.realParty}
+                />
+              ))}
+            </div>
+          )}
         </div>
       </section>
 

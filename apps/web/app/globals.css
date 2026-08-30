@@ -3333,23 +3333,18 @@ textarea {
 }
 
 /* Button pairs that must sit side by side at equal width on phones (CTA band, experiences) */
+/* Phones: stacked, full-width buttons (no squeezed labels); tablets and up: a row. */
 .action-pair,
 .cta-actions {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: minmax(0, 1fr);
   gap: 0.6rem;
   width: 100%;
 }
 .action-pair .btn,
 .cta-actions .btn {
   width: 100%;
-  min-height: 44px;
-  height: auto;
-  padding: 0.5rem 0.6rem;
-  font-size: 0.85rem;
-  line-height: 1.2;
-  text-align: center;
-  white-space: normal;
+  min-height: 46px;
 }
 @media (min-width: 640px) {
   .action-pair {
@@ -3359,9 +3354,40 @@ textarea {
   }
   .action-pair .btn {
     width: auto;
-    padding: 0.6rem 1.2rem;
-    font-size: 0.875rem;
-    white-space: nowrap;
+  }
+  .cta-actions {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* Vertical rhythm: sections carry their own top/bottom padding, so two neighbours used to stack
+   ~96px of empty space on phones. Consecutive plain sections now share one gap. */
+@media (max-width: 640px) {
+  .pb-10 > section.wrap {
+    padding-top: 2rem;
+    padding-bottom: 2rem;
+  }
+  .pb-10 > section.wrap + section.wrap {
+    padding-top: 0.75rem;
+  }
+  .pb-10 > .experience-band {
+    margin-top: 0;
+  }
+  .pb-10 > .experience-band > .wrap {
+    padding-top: 2.25rem;
+    padding-bottom: 2.25rem;
+  }
+  .pb-10 > .experience-band + section.wrap {
+    padding-top: 2rem;
+  }
+  .editorial-hero > .wrap {
+    padding-top: 2rem;
+    padding-bottom: 2.25rem;
+  }
+}
+@media (min-width: 641px) {
+  .pb-10 > section.wrap + section.wrap {
+    padding-top: 1.5rem;
   }
 }
 .empty-state {
