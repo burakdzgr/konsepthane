@@ -62,7 +62,7 @@ for svc in "${SERVICES[@]}"; do roll "$svc"; done
 
 step "Router"
 # Config is bind-mounted: a graceful reload applies changes without dropping connections.
-$COMPOSE exec -T nginx nginx -t >/dev/null && $COMPOSE exec -T nginx nginx -s reload
+$COMPOSE exec -T nginx nginx -t -c /etc/nginx/konsepthane/nginx.prod.conf >/dev/null && $COMPOSE exec -T nginx nginx -s reload
 # Any other service whose definition changed (nginx image, backup, …) — never touches the apps.
 $COMPOSE up -d --remove-orphans --no-recreate >/dev/null
 

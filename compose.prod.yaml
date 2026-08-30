@@ -109,8 +109,11 @@ services:
   nginx:
     image: nginx:1.29-alpine
     ports: !override ['127.0.0.1:${NGINX_PORT:-8180}:80']
-    volumes:
-      - ./infra/nginx/nginx.prod.conf:/etc/nginx/nginx.conf:ro
+    # Mount the directory, not the file: `git pull` replaces files with new inodes and a
+    # single-file bind mount keeps showing the old content (reload would re-apply stale config).
+    volumes: !override
+      - ./infra/nginx:/etc/nginx/konsepthane:ro
+    command: ['nginx', '-c', '/etc/nginx/konsepthane/nginx.prod.conf', '-g', 'daemon off;']
     restart: always
 
   postgres-backup:
