@@ -104,7 +104,7 @@ Kayıt akışı: https://konsepthane.net/tr/kayit → doğrulama e-postası → 
 - Loglar: `docker compose -f compose.yaml -f compose.prod.yaml logs -f api web`.
 - Güncelleme: `git pull && docker compose -f compose.yaml -f compose.prod.yaml up -d --build`
   (migrate servisi migrasyonları uygular).
-- Search Console: sitemap `https://konsepthane.net/sitemap.xml`; içerik ekledikçe manuel gönderim.
+- Search Console: sitemap `https://konsepthane.net/sitemap-index.xml`; içerik ekledikçe manuel gönderim.
 - Analitik: `NEXT_PUBLIC_GA_ID` doldurulunca, çerez onayı veren ziyaretçilerde GA4 yüklenir.
 
 ## 7. Google ile devam et (OAuth istemcisi)

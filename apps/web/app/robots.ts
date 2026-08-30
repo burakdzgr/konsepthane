@@ -23,6 +23,10 @@ const searchResultPatterns = ['/*/kesfet?*'];
 export default function robots(): MetadataRoute.Robots {
   return {
     rules: [{ userAgent: '*', allow: '/', disallow: [...searchResultPatterns, '/admin', '/api/'] }],
-    sitemap: sitemapFamilies.map((family) => absoluteUrl(`/sitemap/${family}.xml`)),
+    // The index first (what Search Console gets), then every shard for crawlers that skip indexes.
+    sitemap: [
+      absoluteUrl('/sitemap-index.xml'),
+      ...sitemapFamilies.map((family) => absoluteUrl(`/sitemap/${family}.xml`)),
+    ],
   };
 }
