@@ -19,7 +19,7 @@ export function GoogleButton({
   const [pending, setPending] = useState(false);
   return (
     <a
-      href={pending ? undefined : href}
+      href={href}
       role="button"
       aria-disabled={pending}
       aria-busy={pending}
@@ -29,7 +29,9 @@ export function GoogleButton({
           event.preventDefault();
           return;
         }
+        event.preventDefault();
         setPending(true);
+        window.location.assign(href);
       }}
     >
       <svg aria-hidden="true" width="18" height="18" viewBox="0 0 48 48">
