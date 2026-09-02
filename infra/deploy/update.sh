@@ -66,6 +66,21 @@ $COMPOSE exec -T nginx nginx -t -c /etc/nginx/konsepthane/nginx.prod.conf >/dev/
 # Any other service whose definition changed (nginx image, backup, …) — never touches the apps.
 $COMPOSE up -d --remove-orphans --no-recreate >/dev/null
 
+step "OAuth yönlendirme kontrolü"
+ROUTER_PORT=$(grep -E '^NGINX_PORT=' .env | tail -1 | cut -d= -f2-)
+ROUTER_PORT=${ROUTER_PORT:-8180}
+OAUTH_PROBE=$(curl -sS -o /dev/null --max-redirs 0 \
+  -w '%{http_code} %{redirect_url}' \
+  -H 'Host: konsepthane.net' \
+  -H 'X-Forwarded-Proto: https' \
+  "http://127.0.0.1:${ROUTER_PORT}/api/auth/google?next=%2Ftr")
+case "$OAUTH_PROBE" in
+  "302 https://accounts.google.com/"*"redirect_uri=https%3A%2F%2Fkonsepthane.net%2Fapi%2Fauth%2Fgoogle%2Fcallback"*)
+    echo "Google OAuth: yönlendirme hazır"
+    ;;
+  *) fail "Google OAuth başlangıcı Google'a yönlenmedi: $OAUTH_PROBE" ;;
+esac
+
 step "Temizlik"
 docker image prune -f >/dev/null
 $COMPOSE ps --format 'table {{.Name}}\t{{.Status}}'
