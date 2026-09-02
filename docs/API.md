@@ -76,3 +76,19 @@ değil ilgili içeriğin `visibility`/`moderationStatus` (deneyimlerde `status`)
 Mutasyonlar JWT Bearer token ister. Yönetim uçları ek olarak `moderation.manage` yetkisini merkezi guard
 üzerinden doğrular. Geçersiz içerik ilişkileri, üçüncü seviye yorum ve ikinci anket oyu servis katmanında
 reddedilir.
+
+## ContentOS yayın köprüsü (servisten servise)
+
+Konsepthane ContentOS, insan onaylı editoryal paketleri yalnızca bu iki endpoint üzerinden yayınlar
+(sözleşme: ContentOS deposundaki `docs/PUBLISHING_API_CONTRACT.md`, kabul edilmiş v1):
+
+- `PUT /internal/contentos/v1/media/{sha256}` — content-addressed medya yükleme (SHA sunucuda yeniden
+  hesaplanır; aynı SHA aynı `media_ref`'e yakınsar).
+- `POST /internal/contentos/v1/publications` — idempotent yayın; paket `Guide` ailesine mekanik
+  blok→Markdown eşlemesiyle aktarılır (yeniden yazma/zenginleştirme yok), Türkçe slug ve kanonik URL
+  üretilir, sonuç `publication_ref` döner. Aynı `Idempotency-Key` + aynı istek 200 ile aynı sonucu
+  döndürür; farklı istek `409 idempotency_conflict` alır.
+
+Kimlik doğrulama `Authorization: Bearer <CONTENTOS_SERVICE_TOKEN>` iledir (kullanıcı/JWT değildir);
+değişken tanımsızken endpointler 503 döner. Yayınların sahibi `CONTENTOS_AUTHOR_EMAIL` ile
+yapılandırılan aktif kullanıcıdır. Bu yollar genel `v1` önekinin ve OpenAPI dokümanının dışındadır.

@@ -35,7 +35,8 @@ export class S3StorageService implements StoragePort {
   private readonly bucket = process.env.S3_BUCKET ?? 'ilham-media';
   /** Browser-reachable base URL of the bucket (CDN in production). */
   private readonly publicBase = (
-    process.env.MEDIA_PUBLIC_URL ?? `http://localhost:9000/${process.env.S3_BUCKET ?? 'ilham-media'}`
+    process.env.MEDIA_PUBLIC_URL ??
+    `http://localhost:9000/${process.env.S3_BUCKET ?? 'ilham-media'}`
   ).replace(/\/$/, '');
   private readonly client = new S3Client({
     region: process.env.S3_REGION ?? 'us-east-1',
@@ -85,6 +86,28 @@ export class S3StorageService implements StoragePort {
     };
   }
 
+  /**
+   * Content-addressed put for the ContentOS publishing bridge: the object key
+   * derives from the sha256 so identical bytes converge on one object, and
+   * re-uploads are harmless overwrites of identical content. Returns the key;
+   * the caller owns the MediaAsset/mapping rows.
+   */
+  async storeContentosBinary(sha256: string, data: Buffer, contentType: string) {
+    const extension = EXTENSION_BY_MIME[contentType] ?? 'bin';
+    const key = `contentos/${sha256}.${extension}`;
+    await this.client.send(
+      new PutObjectCommand({
+        Bucket: this.bucket,
+        Key: key,
+        Body: data,
+        ContentType: contentType,
+        ContentLength: data.length,
+        CacheControl: 'public, max-age=31536000, immutable',
+      }),
+    );
+    return { key, bucket: this.bucket, url: this.publicUrl(key) };
+  }
+
   /** Puts an image the API already holds in memory and records it as a READY asset. */
   async storeImage(file: UploadedBinary, uploaderId: string) {
     const key = this.objectKey(file.originalname, file.mimetype);
@@ -115,6 +138,12 @@ export class S3StorageService implements StoragePort {
       },
       select: { id: true, storageKey: true, mimeType: true },
     });
-    return { id: asset.id, key, url: this.publicUrl(key), mimeType: asset.mimeType, size: file.size };
+    return {
+      id: asset.id,
+      key,
+      url: this.publicUrl(key),
+      mimeType: asset.mimeType,
+      size: file.size,
+    };
   }
 }

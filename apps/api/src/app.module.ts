@@ -16,6 +16,7 @@ import { GuidesModule } from './guides/guides.module';
 import { AuditInterceptor } from './common/audit.interceptor';
 import { AuditModule } from './audit/audit.module';
 import { BlogModule } from './blog/blog.module';
+import { ContentosModule } from './contentos/contentos.module';
 
 function validateEnvironment(config: Record<string, unknown>) {
   const required = ['DATABASE_URL', 'JWT_ACCESS_SECRET', 'JWT_REFRESH_SECRET'];
@@ -48,6 +49,7 @@ function validateEnvironment(config: Record<string, unknown>) {
     UsersModule,
     GuidesModule,
     BlogModule,
+    ContentosModule,
     HealthModule,
     AuditModule,
   ],

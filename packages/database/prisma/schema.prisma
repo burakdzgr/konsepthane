@@ -440,28 +440,29 @@ model ConceptImage {
 }
 
 model MediaAsset {
-  id                 String            @id @default(uuid()) @db.Uuid
-  storageKey         String            @unique @map("storage_key") @db.VarChar(500)
-  bucket             String            @db.VarChar(100)
-  originalName       String            @map("original_name") @db.VarChar(255)
-  mimeType           String            @map("mime_type") @db.VarChar(100)
-  byteSize           BigInt            @map("byte_size")
+  id                 String               @id @default(uuid()) @db.Uuid
+  storageKey         String               @unique @map("storage_key") @db.VarChar(500)
+  bucket             String               @db.VarChar(100)
+  originalName       String               @map("original_name") @db.VarChar(255)
+  mimeType           String               @map("mime_type") @db.VarChar(100)
+  byteSize           BigInt               @map("byte_size")
   width              Int?
   height             Int?
-  checksum           String?           @db.VarChar(128)
-  status             MediaStatus       @default(PENDING)
-  altText            String?           @map("alt_text") @db.VarChar(220)
-  uploaderId         String?           @map("uploader_id") @db.Uuid
-  rightsStatus       MediaRightsStatus @default(PENDING) @map("rights_status")
-  attribution        String?           @db.VarChar(500)
-  licenseInfo        String?           @map("license_info") @db.VarChar(500)
-  consentConfirmedAt DateTime?         @map("consent_confirmed_at")
-  uploader           User?             @relation(fields: [uploaderId], references: [id], onDelete: SetNull)
+  checksum           String?              @db.VarChar(128)
+  status             MediaStatus          @default(PENDING)
+  altText            String?              @map("alt_text") @db.VarChar(220)
+  uploaderId         String?              @map("uploader_id") @db.Uuid
+  rightsStatus       MediaRightsStatus    @default(PENDING) @map("rights_status")
+  attribution        String?              @db.VarChar(500)
+  licenseInfo        String?              @map("license_info") @db.VarChar(500)
+  consentConfirmedAt DateTime?            @map("consent_confirmed_at")
+  uploader           User?                @relation(fields: [uploaderId], references: [id], onDelete: SetNull)
   images             ConceptImage[]
   experienceImages   ExperienceImage[]
   questionImages     QuestionImage[]
-  createdAt          DateTime          @default(now()) @map("created_at")
-  updatedAt          DateTime          @updatedAt @map("updated_at")
+  contentosAsset     ContentosMediaAsset?
+  createdAt          DateTime             @default(now()) @map("created_at")
+  updatedAt          DateTime             @updatedAt @map("updated_at")
 
   @@index([status, createdAt])
   @@index([rightsStatus, createdAt])
@@ -852,6 +853,8 @@ model Guide {
   updatedAt        DateTime            @updatedAt @map("updated_at")
   publishedAt      DateTime?           @map("published_at")
 
+  contentosPublication ContentosPublication?
+
   @@index([status, moderationStatus, visibility, publishedAt])
   @@map("guides")
 }
@@ -1183,4 +1186,40 @@ model OAuthAccount {
   @@unique([provider, providerAccountId])
   @@unique([userId, provider])
   @@map("oauth_accounts")
+}
+
+/// ContentOS publishing bridge (docs: ContentOS Publishing API v1 contract).
+/// Content-addressed media received from ContentOS via PUT /v1/media/{sha256}.
+/// One row per distinct byte content; the binary lives in object storage as a
+/// normal MediaAsset. Re-uploads of the same SHA converge on the same row.
+model ContentosMediaAsset {
+  id            String     @id @default(uuid()) @db.Uuid
+  contentSha256 String     @unique @map("content_sha256") @db.VarChar(64)
+  mediaAssetId  String     @unique @map("media_asset_id") @db.Uuid
+  mediaAsset    MediaAsset @relation(fields: [mediaAssetId], references: [id], onDelete: Restrict)
+  createdAt     DateTime   @default(now()) @map("created_at")
+
+  @@map("contentos_media_assets")
+}
+
+/// One accepted ContentOS publication: the durable idempotency record binding
+/// the ContentOS idempotency key + request hash to the created Guide. Replays
+/// with the same key and hash return the stored result; a different payload
+/// under the same key is an idempotency conflict. Rows are never updated.
+model ContentosPublication {
+  id                   String   @id @default(uuid()) @db.Uuid
+  idempotencyKey       String   @unique @map("idempotency_key") @db.VarChar(128)
+  requestHash          String   @map("request_hash") @db.VarChar(64)
+  workItemId           String   @map("work_item_id") @db.Uuid
+  packageSchemaVersion String   @map("package_schema_version") @db.VarChar(50)
+  packageHash          String?  @map("package_hash") @db.VarChar(64)
+  guideId              String   @unique @map("guide_id") @db.Uuid
+  guide                Guide    @relation(fields: [guideId], references: [id], onDelete: Restrict)
+  publicationRef       String   @unique @map("publication_ref") @db.VarChar(160)
+  canonicalUrl         String   @map("canonical_url") @db.VarChar(500)
+  publishedAt          DateTime @map("published_at")
+  createdAt            DateTime @default(now()) @map("created_at")
+
+  @@index([workItemId])
+  @@map("contentos_publications")
 }
