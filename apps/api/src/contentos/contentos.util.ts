@@ -12,9 +12,22 @@ export const PACKAGE_SCHEMA_VERSION = 'publication-package/1';
 export const BODY_SCHEMA_VERSION = 'writer-draft-body/1';
 export const RESULT_SCHEMA_VERSION = 'publication-result/1';
 export const MEDIA_RESULT_SCHEMA_VERSION = 'media-upload-result/1';
+export const CATEGORY_LIST_SCHEMA_VERSION = 'category-list/1';
+export const CATEGORY_PUBLISHED_LIST_SCHEMA_VERSION = 'category-published-list/1';
+/** Topic list bound: planning needs the live vocabulary, not all of it. */
+export const MAX_TOPICS = 200;
+/** Page size bounds for the per-category published listing. */
+export const DEFAULT_PUBLISHED_PAGE = 100;
+export const MAX_PUBLISHED_PAGE = 200;
 /** Mirrors the ContentOS upload bound; anything above it is 413. */
 export const MAX_MEDIA_BYTES = 10 * 1024 * 1024;
 export const ALLOWED_MEDIA_TYPES = new Set(['image/png', 'image/jpeg', 'image/webp']);
+
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+export function isUuid(value: unknown): value is string {
+  return typeof value === 'string' && UUID.test(value);
+}
 
 export interface ManifestNeed {
   media_asset_id?: string;
