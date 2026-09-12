@@ -18,6 +18,8 @@ async function bootstrap() {
       // v1 contract (base URL ends at .../internal/contentos, then /v1/...).
       { path: 'internal/contentos/v1/media/:sha256', method: RequestMethod.PUT },
       { path: 'internal/contentos/v1/publications', method: RequestMethod.POST },
+      { path: 'internal/contentos/v1/categories', method: RequestMethod.GET },
+      { path: 'internal/contentos/v1/categories/:categoryId/published', method: RequestMethod.GET },
     ],
   });
   app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }));

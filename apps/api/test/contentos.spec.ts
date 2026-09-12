@@ -279,3 +279,278 @@ describe('ContentOS publishing HTTP boundary', () => {
     expect(replayed.status).toBe(200);
   });
 });
+
+describe('ContentOS category discovery', () => {
+  const CATEGORY_ID = 'c1111111-2222-4333-8444-555555555555';
+  const OTHER_ID = 'c9999999-2222-4333-8444-555555555555';
+
+  function db(overrides: Record<string, unknown> = {}) {
+    return {
+      category: {
+        findMany: vi.fn().mockResolvedValue([]),
+        findFirst: vi.fn().mockResolvedValue({ id: CATEGORY_ID }),
+      },
+      concept: {
+        groupBy: vi.fn().mockResolvedValue([]),
+        findMany: vi.fn().mockResolvedValue([]),
+      },
+      topic: { findMany: vi.fn().mockResolvedValue([]) },
+      ...overrides,
+    };
+  }
+
+  function service(database: ReturnType<typeof db>) {
+    return new ContentosService(database as never, {} as never);
+  }
+
+  it('reports the live taxonomy with published counts and public URLs', async () => {
+    process.env.WEB_URL = 'https://konsepthane.net/';
+    const database = db({
+      category: {
+        findMany: vi.fn().mockResolvedValue([
+          {
+            id: CATEGORY_ID,
+            parentId: null,
+            name: 'Doğum Günü',
+            slug: 'dogum-gunu',
+            description: 'Doğum günü konseptleri.',
+            status: 'PUBLISHED',
+          },
+        ]),
+        findFirst: vi.fn(),
+      },
+      concept: {
+        groupBy: vi.fn().mockResolvedValue([{ categoryId: CATEGORY_ID, _count: { _all: 42 } }]),
+        findMany: vi.fn(),
+      },
+    });
+
+    const result = await service(database).listCategories();
+
+    expect(result.schema_version).toBe('category-list/1');
+    expect(result.categories).toEqual([
+      {
+        id: CATEGORY_ID,
+        slug: 'dogum-gunu',
+        name: 'Doğum Günü',
+        url: 'https://konsepthane.net/tr/kategori/dogum-gunu',
+        parent_id: null,
+        accepts_content: true,
+        published_count: 42,
+        description: 'Doğum günü konseptleri.',
+      },
+    ]);
+    // Archived categories never reach ContentOS at all.
+    expect(database.category.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { archivedAt: null } }),
+    );
+    delete process.env.WEB_URL;
+  });
+
+  it('closes a category that is not published instead of hiding it', async () => {
+    const database = db({
+      category: {
+        findMany: vi.fn().mockResolvedValue([
+          {
+            id: CATEGORY_ID,
+            parentId: null,
+            name: 'Taslak Kategori',
+            slug: 'taslak',
+            description: null,
+            status: 'DRAFT',
+          },
+        ]),
+        findFirst: vi.fn(),
+      },
+    });
+
+    const [category] = (await service(database).listCategories()).categories;
+
+    // Visible to the operator, but ContentOS must never plan or publish here.
+    expect(category?.accepts_content).toBe(false);
+    expect(category?.published_count).toBe(0);
+    expect(category).not.toHaveProperty('description');
+  });
+
+  it('reports topics as a flat vocabulary without inventing a category link', async () => {
+    const database = db({
+      topic: {
+        findMany: vi
+          .fn()
+          .mockResolvedValue([
+            { id: OTHER_ID, name: 'Safari', slug: 'safari', kind: 'THEME', contentCount: 12 },
+          ]),
+      },
+    });
+
+    const result = await service(database).listCategories();
+
+    // The schema records no topic-to-category relation, so none is claimed.
+    expect(result.topics).toEqual([
+      { id: OTHER_ID, slug: 'safari', name: 'Safari', kind: 'THEME', content_count: 12 },
+    ]);
+    expect(result.topics[0]).not.toHaveProperty('category_ids');
+  });
+
+  it('lists published titles in a category for gap analysis', async () => {
+    const published = new Date('2026-05-02T09:00:00.000Z');
+    const database = db({
+      concept: {
+        groupBy: vi.fn(),
+        findMany: vi.fn().mockResolvedValue([
+          {
+            id: OTHER_ID,
+            title: 'Safari Temalı 1 Yaş',
+            slug: 'safari-1-yas',
+            publishedAt: published,
+          },
+        ]),
+      },
+    });
+
+    const result = await service(database).listPublishedConcepts(CATEGORY_ID);
+
+    expect(result.schema_version).toBe('category-published-list/1');
+    expect(result.items).toEqual([
+      {
+        content_id: OTHER_ID,
+        title: 'Safari Temalı 1 Yaş',
+        slug: 'safari-1-yas',
+        published_at: '2026-05-02T09:00:00.000Z',
+      },
+    ]);
+    expect(result.next_cursor).toBeNull();
+    // Only PUBLISHED, non-archived concepts of THIS category are reported.
+    expect(database.concept.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { categoryId: CATEGORY_ID, status: 'PUBLISHED', archivedAt: null },
+      }),
+    );
+  });
+
+  it('pages with a cursor and never leaks body text', async () => {
+    const rows = Array.from({ length: 3 }, (_, index) => ({
+      id: `c000000${index}-2222-4333-8444-555555555555`,
+      title: `Başlık ${index}`,
+      slug: `baslik-${index}`,
+      publishedAt: null,
+    }));
+    const findMany = vi.fn().mockResolvedValue(rows);
+    const database = db({ concept: { groupBy: vi.fn(), findMany } });
+
+    const result = await service(database).listPublishedConcepts(CATEGORY_ID, '2');
+
+    // One extra row was fetched to decide whether another page exists.
+    expect(findMany).toHaveBeenCalledWith(expect.objectContaining({ take: 3 }));
+    expect(result.items).toHaveLength(2);
+    expect(result.next_cursor).toBe(rows[1]!.id);
+    for (const item of result.items)
+      expect(Object.keys(item).sort()).toEqual(['content_id', 'published_at', 'slug', 'title']);
+  });
+
+  it('bounds the page size rather than trusting the caller', async () => {
+    const findMany = vi.fn().mockResolvedValue([]);
+    const database = db({ concept: { groupBy: vi.fn(), findMany } });
+    const target = service(database);
+
+    await target.listPublishedConcepts(CATEGORY_ID, '99999');
+    expect(findMany).toHaveBeenLastCalledWith(expect.objectContaining({ take: 201 }));
+
+    await target.listPublishedConcepts(CATEGORY_ID, 'not-a-number');
+    expect(findMany).toHaveBeenLastCalledWith(expect.objectContaining({ take: 101 }));
+  });
+
+  it('refuses an unknown or malformed category with a contract error', async () => {
+    const database = db({
+      category: { findMany: vi.fn(), findFirst: vi.fn().mockResolvedValue(null) },
+    });
+
+    await expect(service(database).listPublishedConcepts(CATEGORY_ID)).rejects.toMatchObject({
+      response: { code: 'unknown_category' },
+    });
+    // A malformed id must never reach Prisma.
+    await expect(service(db()).listPublishedConcepts('not-a-uuid')).rejects.toMatchObject({
+      response: { code: 'unknown_category' },
+    });
+    await expect(
+      service(db()).listPublishedConcepts(CATEGORY_ID, undefined, 'not-a-uuid'),
+    ).rejects.toMatchObject({ response: { code: 'malformed_request' } });
+  });
+});
+
+describe('ContentOS category HTTP boundary', () => {
+  let app: NestExpressApplication;
+  let base: string;
+  const listCategories = vi.fn();
+  const listPublishedConcepts = vi.fn();
+
+  beforeAll(async () => {
+    process.env.CONTENTOS_SERVICE_TOKEN = SERVICE_TOKEN;
+    const module = await Test.createTestingModule({
+      controllers: [ContentosController],
+      providers: [
+        ContentosServiceGuard,
+        { provide: ContentosService, useValue: { listCategories, listPublishedConcepts } },
+        { provide: S3StorageService, useValue: {} },
+        { provide: DatabaseService, useValue: {} },
+      ],
+    }).compile();
+    app = module.createNestApplication<NestExpressApplication>();
+    await app.listen(0);
+    base = (await app.getUrl()).replace('[::1]', '127.0.0.1');
+  });
+
+  afterAll(async () => {
+    await app.close();
+    delete process.env.CONTENTOS_SERVICE_TOKEN;
+  });
+
+  afterEach(() => {
+    listCategories.mockReset();
+    listPublishedConcepts.mockReset();
+  });
+
+  it('requires the service token on the category endpoints too', async () => {
+    const response = await fetch(`${base}/internal/contentos/v1/categories`);
+    expect(response.status).toBe(401);
+    expect(((await response.json()) as { error: { code: string } }).error.code).toBe(
+      'authentication_failed',
+    );
+    expect(listCategories).not.toHaveBeenCalled();
+  });
+
+  it('serves the category list at the contract path', async () => {
+    listCategories.mockResolvedValue({
+      schema_version: 'category-list/1',
+      generated_at: '2026-09-12T08:00:00.000Z',
+      categories: [],
+      topics: [],
+    });
+    const response = await fetch(`${base}/internal/contentos/v1/categories`, {
+      headers: { authorization: `Bearer ${SERVICE_TOKEN}` },
+    });
+    expect(response.status).toBe(200);
+    expect(((await response.json()) as { schema_version: string }).schema_version).toBe(
+      'category-list/1',
+    );
+  });
+
+  it('passes the category id and paging query through', async () => {
+    listPublishedConcepts.mockResolvedValue({
+      schema_version: 'category-published-list/1',
+      category_id: 'c1111111-2222-4333-8444-555555555555',
+      items: [],
+      next_cursor: null,
+    });
+    const response = await fetch(
+      `${base}/internal/contentos/v1/categories/c1111111-2222-4333-8444-555555555555/published?limit=5&cursor=c2222222-2222-4333-8444-555555555555`,
+      { headers: { authorization: `Bearer ${SERVICE_TOKEN}` } },
+    );
+    expect(response.status).toBe(200);
+    expect(listPublishedConcepts).toHaveBeenCalledWith(
+      'c1111111-2222-4333-8444-555555555555',
+      '5',
+      'c2222222-2222-4333-8444-555555555555',
+    );
+  });
+});

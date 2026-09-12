@@ -11,7 +11,12 @@ import { DatabaseService } from '../common/database.module';
 import { S3StorageService } from '../media/storage.service';
 import {
   ALLOWED_MEDIA_TYPES,
+  CATEGORY_LIST_SCHEMA_VERSION,
+  CATEGORY_PUBLISHED_LIST_SCHEMA_VERSION,
+  DEFAULT_PUBLISHED_PAGE,
   MAX_MEDIA_BYTES,
+  MAX_PUBLISHED_PAGE,
+  MAX_TOPICS,
   MEDIA_RESULT_SCHEMA_VERSION,
   RESULT_SCHEMA_VERSION,
   deriveSummary,
@@ -19,6 +24,7 @@ import {
   renderPackageMarkdown,
   requestHash,
   sha256Hex,
+  isUuid,
   slugCandidates,
   validateManifest,
   validatePackage,
@@ -30,6 +36,46 @@ import {
 interface PublicationRequestBody {
   package: PublicationPackageBody;
   media_manifest: { needs?: Record<string, ManifestNeed>; waived_unmet_indexes?: number[] };
+}
+
+export interface CategoryView {
+  id: string;
+  slug: string;
+  name: string;
+  url: string;
+  parent_id: string | null;
+  accepts_content: boolean;
+  published_count: number;
+  description?: string;
+}
+
+export interface TopicView {
+  id: string;
+  slug: string;
+  name: string;
+  kind: string;
+  content_count: number;
+}
+
+export interface CategoryListResult {
+  schema_version: string;
+  generated_at: string;
+  categories: CategoryView[];
+  topics: TopicView[];
+}
+
+export interface PublishedConceptView {
+  content_id: string;
+  title: string;
+  slug: string;
+  published_at: string | null;
+}
+
+export interface CategoryPublishedListResult {
+  schema_version: string;
+  category_id: string;
+  items: PublishedConceptView[];
+  next_cursor: string | null;
 }
 
 export interface PublicationResult {
@@ -56,6 +102,125 @@ export class ContentosService {
     @Inject(DatabaseService) private readonly db: DatabaseService,
     @Inject(S3StorageService) private readonly storage: S3StorageService,
   ) {}
+
+  // --- category discovery ---------------------------------------------------
+
+  /**
+   * The site taxonomy ContentOS plans against.
+   *
+   * ContentOS has no category of its own and must never invent one: this is
+   * the single source of truth for what Konsepthane actually publishes into.
+   * Archived categories are omitted entirely; a category that is not
+   * PUBLISHED is returned with `accepts_content: false` so ContentOS can show
+   * it without ever planning or publishing into it.
+   */
+  async listCategories(): Promise<CategoryListResult> {
+    const [categories, counts, topics] = await Promise.all([
+      this.db.category.findMany({
+        where: { archivedAt: null },
+        orderBy: [{ sortOrder: 'asc' }, { name: 'asc' }],
+        select: {
+          id: true,
+          parentId: true,
+          name: true,
+          slug: true,
+          description: true,
+          status: true,
+        },
+      }),
+      this.db.concept.groupBy({
+        by: ['categoryId'],
+        where: { status: 'PUBLISHED', archivedAt: null },
+        _count: { _all: true },
+      }),
+      this.db.topic.findMany({
+        orderBy: [{ contentCount: 'desc' }, { name: 'asc' }],
+        take: MAX_TOPICS,
+        select: { id: true, name: true, slug: true, kind: true, contentCount: true },
+      }),
+    ]);
+    const published = new Map(counts.map((row) => [row.categoryId, row._count._all]));
+    const base = webBase();
+    return {
+      schema_version: CATEGORY_LIST_SCHEMA_VERSION,
+      generated_at: new Date().toISOString(),
+      categories: categories.map((category) => ({
+        id: category.id,
+        slug: category.slug,
+        name: category.name,
+        url: `${base}/tr/kategori/${category.slug}`,
+        parent_id: category.parentId,
+        accepts_content: category.status === 'PUBLISHED',
+        published_count: published.get(category.id) ?? 0,
+        ...(category.description ? { description: category.description } : {}),
+      })),
+      // Topics are a flat cross-cutting vocabulary (theme, age, colour,
+      // budget, format). The schema records no topic-to-category relation,
+      // so none is reported: `kind` is what ContentOS can honestly use.
+      topics: topics.map((topic) => ({
+        id: topic.id,
+        slug: topic.slug,
+        name: topic.name,
+        kind: topic.kind,
+        content_count: topic.contentCount,
+      })),
+    };
+  }
+
+  /**
+   * What is ALREADY published in one category — the input to gap analysis.
+   *
+   * Without this, a content plan is only a guess: ContentOS would keep
+   * proposing subjects the category already covers. Titles, slugs and dates
+   * are enough for that, so no body text leaves the platform.
+   */
+  async listPublishedConcepts(
+    categoryId: string,
+    limit?: string,
+    cursor?: string,
+  ): Promise<CategoryPublishedListResult> {
+    if (!isUuid(categoryId))
+      throw new UnprocessableEntityException({
+        code: 'unknown_category',
+        message: 'category_id must be a UUID from the category list.',
+      });
+    if (cursor !== undefined && !isUuid(cursor))
+      throw new UnprocessableEntityException({
+        code: 'malformed_request',
+        message: 'cursor must be a value returned as next_cursor.',
+      });
+    const exists = await this.db.category.findFirst({
+      where: { id: categoryId, archivedAt: null },
+      select: { id: true },
+    });
+    if (!exists)
+      throw new UnprocessableEntityException({
+        code: 'unknown_category',
+        message: 'No such category.',
+      });
+
+    const take = boundedPage(limit);
+    const rows = await this.db.concept.findMany({
+      where: { categoryId, status: 'PUBLISHED', archivedAt: null },
+      orderBy: [{ publishedAt: 'desc' }, { id: 'asc' }],
+      // One extra row decides whether another page exists, without a count.
+      take: take + 1,
+      ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
+      select: { id: true, title: true, slug: true, publishedAt: true },
+    });
+    const page = rows.slice(0, take);
+    return {
+      schema_version: CATEGORY_PUBLISHED_LIST_SCHEMA_VERSION,
+      category_id: categoryId,
+      items: page.map((row) => ({
+        content_id: row.id,
+        title: row.title,
+        slug: row.slug,
+        published_at: row.publishedAt ? row.publishedAt.toISOString() : null,
+      })),
+      next_cursor: rows.length > take ? (page[page.length - 1]?.id ?? null) : null,
+    };
+  }
 
   // --- media ----------------------------------------------------------------
 
@@ -355,4 +520,15 @@ export class ContentosService {
       });
     return free;
   }
+}
+
+function webBase(): string {
+  return (process.env.WEB_URL ?? 'http://localhost:3000').replace(/\/$/, '');
+}
+
+function boundedPage(limit?: string): number {
+  if (limit === undefined) return DEFAULT_PUBLISHED_PAGE;
+  const parsed = Number(limit);
+  if (!Number.isInteger(parsed) || parsed < 1) return DEFAULT_PUBLISHED_PAGE;
+  return Math.min(parsed, MAX_PUBLISHED_PAGE);
 }

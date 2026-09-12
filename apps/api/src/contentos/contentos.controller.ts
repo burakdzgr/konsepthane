@@ -2,12 +2,14 @@ import {
   BadRequestException,
   Body,
   Controller,
+  Get,
   Headers,
   HttpCode,
   Inject,
   Param,
   Post,
   Put,
+  Query,
   Req,
   Res,
   UseFilters,
@@ -36,6 +38,22 @@ import { ContentosServiceGuard } from './service-token.guard';
 export class ContentosController {
   // Explicit token: vitest/esbuild does not emit design metadata.
   constructor(@Inject(ContentosService) private readonly contentos: ContentosService) {}
+
+  /** The site taxonomy ContentOS plans against (it never invents one). */
+  @Get('categories')
+  listCategories() {
+    return this.contentos.listCategories();
+  }
+
+  /** Already-published titles in one category: the input to gap analysis. */
+  @Get('categories/:categoryId/published')
+  listPublished(
+    @Param('categoryId') categoryId: string,
+    @Query('limit') limit?: string,
+    @Query('cursor') cursor?: string,
+  ) {
+    return this.contentos.listPublishedConcepts(categoryId, limit, cursor);
+  }
 
   @Put('media/:sha256')
   async putMedia(
